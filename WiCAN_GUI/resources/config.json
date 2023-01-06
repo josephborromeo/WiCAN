@@ -1,0 +1,5 @@
+{
+  "_comment": "This file is used for storing program config settings - DBC location, dark/light mode, etc.",
+  "DBC_path": "resources/2018CAR.dbc",
+  "plot_time_span": 20
+}
