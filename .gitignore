@@ -1,0 +1,61 @@
+#################
+## Altium
+#################
+
+# backup and output directories
+History/
+Project Logs for */
+logs/
+Project Outputs for */
+output/
+__Previews/
+
+# web reports
+*.PcbDoc.htm
+*.SchDoc.htm
+*.PcbLib.htm
+*.SchLib.htm
+
+# temporary files
+*.~SchDoc
+*.~PcbDoc
+*.~SchLib
+*.~PcbLib
+*.PrjPcbStructure
+
+# export log
+*.Rep
+
+# library editor reports
+*.REP
+*.CMP
+*.ERR
+
+#designator Log
+*.WAS
+*.LOG
+
+# viewport settings
+*.PcbDocPreview
+*.SchDocPreview
+*.HarnessPreview
+
+*.AnnotationPreview
+*.Annotation
+
+#debug log
+debug.log
+
+############
+## Windows
+############
+
+# Windows image file caches
+Thumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Mac crap
+.DS_Store
+*.icloud
