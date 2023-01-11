@@ -15,6 +15,7 @@ fix the CMakeLists.txt file to add EXTRA_COMPONENT_DIRS (?maybe?) so that we don
 // Common Includes
 #include "../common/rgb_led.h"
 #include "../common/temp_sensor.h"
+#include "../common/twai_driver.h"
 
 //TX Specific Includes
 #include "sdmmc_driver.h"
@@ -25,7 +26,6 @@ static const char *TAG = "MAIN";
 
 
 #define ESP_INTR_FLAG_DEFAULT 0
-
 
 
 // GPIO ISR and handler
@@ -58,10 +58,11 @@ static void config_func_button(void){
 
 void app_main(void)
 {
-    // config_led();
+    config_led();
     config_func_button();
     ESP_LOGI(TAG, "Configured GPIO");
     init_sd_card();
+    initCAN();
     
     //create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
@@ -74,8 +75,9 @@ void app_main(void)
 
     printf("Minimum free heap size: %"PRIu32" bytes\n", esp_get_minimum_free_heap_size());
 
-    // xTaskCreate(&cycle_led, "LED_Task", 2000, NULL, 5, NULL);
-    xTaskCreate(rainbow_cycle, "LED_Task", 2000, NULL, 1, NULL);
-    xTaskCreate(&poll_board_temp, "Temp_Task", 2050, NULL, 5, NULL);
+    // xTaskCreate(&cycle_led, "LED_Task", 2050, NULL, 5, NULL);
+    xTaskCreate(rainbow_cycle, "LED_Task", 2500, NULL, 5, NULL);
+    xTaskCreate(&poll_board_temp, "Temp_Task", 2500, NULL, 5, NULL);
+    xTaskCreate(&CAN_RX_Task, "CAN_RX_Task", 6000, NULL, 2, NULL);
     
 }

@@ -1,11 +1,13 @@
 #include "sdmmc_driver.h"
 
 #include <string.h>
+#include <stdio.h>
 #include <sys/unistd.h>
 #include <sys/stat.h>
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
 #include "driver/sdmmc_host.h"
+#include "dirent.h"
 
 #include "esp_log.h"
 
@@ -45,4 +47,18 @@ void init_sd_card(void){
     }
 
     sdmmc_card_print_info(stdout, card);
+    print_files();
+
+}
+
+void print_files(void){
+    DIR *dir = opendir(MOUNT_POINT);
+    struct dirent *dp;
+
+    while ((dp = readdir(dir)) != NULL) {
+        printf("File found: %s\n", dp->d_name);
+
+    }
+    closedir(dir);
+    printf("DIR CLOSED\n");
 }

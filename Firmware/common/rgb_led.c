@@ -100,7 +100,7 @@ void cycle_led(void*){
     curr_state++;
     if (curr_state > LED_WHITE) curr_state=0;
     ESP_LOGI(TAG, "Current LED state: %u", curr_state);
-    ESP_LOGI(TAG, "Unused Stack for LED Task: %u", uxTaskGetStackHighWaterMark(NULL));
+    // ESP_LOGI(TAG, "Unused Stack for LED Task: %u", uxTaskGetStackHighWaterMark(NULL));
     
     vTaskDelay(pdMS_TO_TICKS(1000));    // Sleep for 1s
 
@@ -120,8 +120,6 @@ void ledc_init(void)
     ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
 
     // Prepare and then apply the LEDC PWM channel configuration
-    
-
     for (int ch = 0; ch < NUM_COLORS; ch++) {
         ledc_channel_config(&ledc_channel[ch]);
     }
@@ -129,7 +127,7 @@ void ledc_init(void)
 
 void rainbow_cycle(void*){
     uint8_t step_size = 2;
-    uint8_t max_brightness = 20; // Percent of max brightness
+    uint8_t max_brightness = 40; // Percent of max brightness
     uint8_t min_duty = LEDC_DUTY - (LEDC_DUTY*(max_brightness/100.0));
     ledc_init();
 
@@ -138,14 +136,14 @@ void rainbow_cycle(void*){
             for (int intensity=LEDC_DUTY; intensity > (min_duty - step_size); intensity-=step_size){
                 ledc_set_duty(ledc_channel[color].speed_mode, ledc_channel[color].channel, intensity);
                 ledc_update_duty(ledc_channel[color].speed_mode, ledc_channel[color].channel);
-                vTaskDelay(pdMS_TO_TICKS(40));
+                vTaskDelay(pdMS_TO_TICKS(30));
             }
         }
         for (int color=0; color < NUM_COLORS; color++){
             for (int intensity=min_duty; intensity < (LEDC_DUTY - step_size); intensity+=5){
                 ledc_set_duty(ledc_channel[color].speed_mode, ledc_channel[color].channel, intensity);
                 ledc_update_duty(ledc_channel[color].speed_mode, ledc_channel[color].channel);
-                vTaskDelay(pdMS_TO_TICKS(40));
+                vTaskDelay(pdMS_TO_TICKS(30));
             }
         }
     }

@@ -4,6 +4,7 @@ idf_component_register(
         "sdmmc_driver.c"
         "../../common/rgb_led.c"
         "../../common/temp_sensor.c"
+        "../../common/twai_driver.c"
                     
     INCLUDE_DIRS 
         "."

@@ -49,10 +49,10 @@ void poll_board_temp(void*){
         ESP_ERROR_CHECK(temperature_sensor_get_celsius(temp_handle, &tsens_out));
 
         // ESP_LOGI(TAG, "Board Temp Voltage: %.2f mV", ADC_TO_MV(temp_mv));
-        ESP_LOGI(TAG, "Board Temp: %.2f C \n Internal Temp: %.2f C", MV_TO_TEMP_C(ADC_TO_MV(temp_mv)), tsens_out);
-        fprintf(stderr, "USB Serial print -> stderr\n");
+        ESP_LOGI(TAG, "Board Temp: %.2f C \t Internal Temp: %.2f C", MV_TO_TEMP_C(ADC_TO_MV(temp_mv)), tsens_out);
+        // fprintf(stdout, "USB Serial print -> stdout\n");
         // ESP_LOGI(TAG, "ESP Internal Temp sensor: %.2f C", tsens_out);
-        ESP_LOGI(TAG, "Unused Stack for Temp Task: %u", uxTaskGetStackHighWaterMark(NULL));
+        // ESP_LOGI(TAG, "Unused Stack for Temp Task: %u", uxTaskGetStackHighWaterMark(NULL));
         vTaskDelay(pdMS_TO_TICKS(2000));    // Sleep for 2s
     }
     
