@@ -61,7 +61,7 @@ void app_main(void)
     config_led();
     config_func_button();
     ESP_LOGI(TAG, "Configured GPIO");
-    init_sd_card();
+        // init_sd_card();      // Fix this to not crash if no SD card is in/ not formatted
     initCAN();
     
     //create a queue to handle gpio event from isr
