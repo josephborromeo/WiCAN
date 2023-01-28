@@ -44,10 +44,9 @@ void init_sd_card(void){
 
     } else{
         ESP_LOGI(TAG, "SD Card mounted successfully!");
-    }
-
-    sdmmc_card_print_info(stdout, card);
-    print_files();
+        sdmmc_card_print_info(stdout, card);
+        print_files();
+    }   
 
 }
 

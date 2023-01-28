@@ -12,19 +12,26 @@ fix the CMakeLists.txt file to add EXTRA_COMPONENT_DIRS (?maybe?) so that we don
 
 */
 
+// TODO: Add include guards to all header files
+//  - https://stackoverflow.com/questions/1653958/why-are-ifndef-and-define-used-in-c-header-files
+
 // Common Includes
 #include "../common/rgb_led.h"
 #include "../common/temp_sensor.h"
 #include "../common/twai_driver.h"
+#include "../common/wifi.h"
 
 //TX Specific Includes
 #include "sdmmc_driver.h"
 
+// Board Identifier:
+#define WICAN_TX
+
+
+
 static const char *TAG = "MAIN";
 
 #define func_btn_Pin 0
-
-
 #define ESP_INTR_FLAG_DEFAULT 0
 
 
@@ -61,7 +68,7 @@ void app_main(void)
     config_led();
     config_func_button();
     ESP_LOGI(TAG, "Configured GPIO");
-        // init_sd_card();      // Fix this to not crash if no SD card is in/ not formatted
+    init_sd_card();      // Fix this to not crash if no SD card is in/ not formatted
     initCAN();
     
     //create a queue to handle gpio event from isr

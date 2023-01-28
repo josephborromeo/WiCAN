@@ -1,3 +1,7 @@
 #include <stdbool.h>
 
 #define CONFIG_ESPNOW_ENABLE_LONG_RANGE true
+
+#define ESPNOW_WIFI_MODE WIFI_MODE_STA
+#define ESPNOW_WIFI_IF   ESP_IF_WIFI_STA
+#define CONFIG_ESPNOW_CHANNEL 1
