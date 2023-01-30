@@ -5,6 +5,7 @@
 #include "freertos/queue.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
+#include "nvs_flash.h"
 
 /*
             FIXME
@@ -64,12 +65,22 @@ static void config_func_button(void){
 
 
 void app_main(void)
-{
+{   
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK( nvs_flash_erase() );
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK( ret );
+
+
     config_led();
     config_func_button();
     ESP_LOGI(TAG, "Configured GPIO");
     init_sd_card();      // Fix this to not crash if no SD card is in/ not formatted
     initCAN();
+    
+    wifi_init();
     
     //create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
@@ -86,5 +97,5 @@ void app_main(void)
     xTaskCreate(rainbow_cycle, "LED_Task", 2500, NULL, 5, NULL);
     xTaskCreate(&poll_board_temp, "Temp_Task", 2500, NULL, 5, NULL);
     xTaskCreate(&CAN_RX_Task, "CAN_RX_Task", 6000, NULL, 2, NULL);
-    
+    xTaskCreate(&send_data_task, "ESP_NOW_TX_Task", 6000, NULL, 2, NULL);
 }
