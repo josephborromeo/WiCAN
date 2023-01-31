@@ -45,11 +45,11 @@ void CAN_RX_Task(void*){
         twai_message_t message;
         if (twai_receive(&message, pdMS_TO_TICKS(RX_Timeout)) == ESP_OK) {
             // printf("Message received\n");
-            printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
-            for (int i = 0; i < message.data_length_code; i++) {
-                printf("%d ", message.data[i]);
-            }
-            printf("\n");
+            // printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
+            // for (int i = 0; i < message.data_length_code; i++) {
+            //     printf("%d ", message.data[i]);
+            // }
+            // printf("\n");
             rcv_counter++;
         } 
         else {
