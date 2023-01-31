@@ -7,9 +7,6 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 
-// Board Identifier:
-#define WICAN_RX
-
 /*
             FIXME
 fix the CMakeLists.txt file to add EXTRA_COMPONENT_DIRS (?maybe?) so that we dont have to do relative directories when importing common files 

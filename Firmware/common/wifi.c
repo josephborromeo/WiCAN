@@ -22,7 +22,6 @@ void wifi_init(void) {
     espnow_init();
 }
 
-#define WICAN_RX        // FIXME: Figure out ifdefs from different files
 
 void espnow_init(void) {
     ESP_ERROR_CHECK( esp_now_init() );
@@ -32,7 +31,7 @@ void espnow_init(void) {
     // Add Peer Device(s)
     esp_now_peer_info_t *peer = malloc(sizeof(esp_now_peer_info_t));
     
-    #ifdef WICAN_TX
+    #ifdef WiCAN_TX_Board
     for (uint8_t rx=0; rx<NUM_RECEIVERS; rx++){
         memset(peer, 0, sizeof(esp_now_peer_info_t));
         peer->channel = CONFIG_ESPNOW_CHANNEL;
@@ -44,7 +43,7 @@ void espnow_init(void) {
     }
     #endif 
 
-    #ifdef WICAN_RX
+    #ifdef WiCAN_RX_Board
     memset(peer, 0, sizeof(esp_now_peer_info_t));
     peer->channel = CONFIG_ESPNOW_CHANNEL;
     peer->ifidx = ESPNOW_WIFI_IF;
@@ -74,7 +73,9 @@ void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 
 void espnow_recv_cb(const uint8_t *mac, const uint8_t *data, int data_len){
     // wican_data *recv_data = data;
-	ESP_LOGI("RECV_CB", "DATA Received");
+	// ESP_LOGI("RECV_CB", "DATA Received: %s", recv_data->text);
+    ESP_LOGI("RECV_CB", "DATA Received: %u", *data);
+
 }
 
 
@@ -82,15 +83,15 @@ void send_data_task(void*){
     // wican_data *sending_data = {"Hello World"};
     vTaskDelay(pdMS_TO_TICKS(1000));
 
-    const uint8_t data = 8;
+    const uint8_t data = 64;
 
     while (1){
 
         for (uint8_t rx=0; rx<NUM_RECEIVERS; ++rx){
             // ESP_ERROR_CHECK(esp_now_send(receiver_mac_addresses[rx], sending_data, sizeof(sending_data)));
-
+            // esp_now_send(receiver_mac_addresses[rx], sending_data, sizeof(sending_data));
             esp_now_send(receiver_mac_addresses[rx], &data, sizeof(data));
-            ESP_LOGI("SEND_FUNC", "Sent Data Via ESP NOW");
+            // ESP_LOGI("SEND_FUNC", "Sent Data Via ESP NOW");
             // ESP_LOGI("SEND_FUNC", "%u", ret);
             
         }
