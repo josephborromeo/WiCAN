@@ -10,6 +10,6 @@ typedef enum {
 // Custom packet datastructure
 typedef struct{
     espnow_data_t data_type;
-    twai_message_t data;
+    twai_message_t data;        // Add timestamp in
 } wican_data_t;
 

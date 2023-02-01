@@ -19,7 +19,7 @@ fix the CMakeLists.txt file to add EXTRA_COMPONENT_DIRS (?maybe?) so that we don
 #include "../common/wifi.h"
 
 //RX Specific Includes
-
+#include "usb_driver.h"
 
 
 
@@ -43,6 +43,8 @@ void app_main(void)
     ESP_LOGI(TAG, "Configured GPIO");
     
     wifi_init();
+
+    // usb_init();
 
     printf("Minimum free heap size: %"PRIu32" bytes\n", esp_get_minimum_free_heap_size());
 

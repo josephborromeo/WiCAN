@@ -124,13 +124,13 @@ void parse_incoming(wican_data_t received_data){
     switch (received_data.data_type)
     {
         case CAN_FRAME:
-        // twai_message_t message = received_data.data;
+        twai_message_t message = received_data.data;
         printf("CAN Message received\n");
-        // printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
-        // for (int i = 0; i < message.data_length_code; i++) {
-        //     printf("%d ", message.data[i]);
-        // }
-        // printf("\n");
+        printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
+        for (int i = 0; i < message.data_length_code; i++) {
+            printf("%d ", message.data[i]);
+        }
+        printf("\n");
         break;
 
         default:
