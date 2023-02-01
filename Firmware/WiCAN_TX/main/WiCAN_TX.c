@@ -90,8 +90,10 @@ void app_main(void)
     printf("Minimum free heap size: %"PRIu32" bytes\n", esp_get_minimum_free_heap_size());
 
     // xTaskCreate(&cycle_led, "LED_Task", 2050, NULL, 5, NULL);
-    xTaskCreate(rainbow_cycle, "LED_Task", 2500, NULL, 5, NULL);
-    xTaskCreate(&poll_board_temp, "Temp_Task", 2500, NULL, 5, NULL);
-    xTaskCreate(&CAN_RX_Task, "CAN_RX_Task", 6000, NULL, 2, NULL);
-    xTaskCreate(&send_data_task, "ESP_NOW_TX_Task", 6000, NULL, 2, NULL);
+    xTaskCreate(rainbow_cycle, "LED_Task", 2500, NULL, 2, NULL);
+    xTaskCreate(&poll_board_temp, "Temp_Task", 2500, NULL, 2, NULL);
+    xTaskCreate(&process_CAN_frame, "CAN_Process_Task", 8000, NULL, 8, NULL);
+    xTaskCreate(&CAN_RX_Task, "CAN_RX_Task", 6000, NULL, 10, NULL);
+    xTaskCreate(&test_send_data_task, "ESP_NOW_TX_Task", 4000, NULL, 2, NULL);
+    
 }

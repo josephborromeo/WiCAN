@@ -59,8 +59,7 @@ void espnow_init(void) {
 // Send and Receive Callbacks -- Keep these short
 
 void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
-{   
-    ESP_LOGI("send_cb", "cb ran");
+{   // Just printout if error occurs - maybe disable
     if (mac_addr == NULL) {
         ESP_LOGI("send_cb", "Send cb arg error");
         return;
@@ -72,32 +71,69 @@ void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 }
 
 void espnow_recv_cb(const uint8_t *mac, const uint8_t *data, int data_len){
-    // wican_data *recv_data = data;
-	// ESP_LOGI("RECV_CB", "DATA Received: %s", recv_data->text);
-    ESP_LOGI("RECV_CB", "DATA Received: %u", *data);
+    wican_data_t recv_data;
+    memcpy(&recv_data, data, data_len);
+    parse_incoming(recv_data);
 
 }
 
-
-void send_data_task(void*){
-    // wican_data *sending_data = {"Hello World"};
-    vTaskDelay(pdMS_TO_TICKS(1000));
-
-    const uint8_t data = 64;
-
-    while (1){
-
-        for (uint8_t rx=0; rx<NUM_RECEIVERS; ++rx){
-            // ESP_ERROR_CHECK(esp_now_send(receiver_mac_addresses[rx], sending_data, sizeof(sending_data)));
-            // esp_now_send(receiver_mac_addresses[rx], sending_data, sizeof(sending_data));
-            esp_now_send(receiver_mac_addresses[rx], &data, sizeof(data));
-            // ESP_LOGI("SEND_FUNC", "Sent Data Via ESP NOW");
-            // ESP_LOGI("SEND_FUNC", "%u", ret);
-            
-        }
-        
-
-        vTaskDelay(pdMS_TO_TICKS(1000));    // Sleep for 0.5s
+/*
+    Send data to all receivers in list 
+*/
+void send_to_all(const uint8_t *data, size_t len) {
+    // TODO: Get return value of esp_now_send and trigger LED light to change state
+    for (uint8_t rx=0; rx<NUM_RECEIVERS; ++rx){
+        esp_now_send(receiver_mac_addresses[rx], data, len);            
     }
 }
 
+void test_send_data_task(void*){
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    twai_message_t message;
+    
+    message.identifier = 1234;
+    message.extd=1;
+    message.data_length_code = 8;
+
+    for (int i = 0; i < message.data_length_code; i++) {
+        message.data[i] = i;
+    }
+
+
+    // const uint8_t *data = 64;
+
+    while (1){
+        send_CAN_frame(message);
+        // send_to_all(data, sizeof(data));
+        vTaskDelay(pdMS_TO_TICKS(500));    // Sleep for 0.5s
+    }
+}
+
+void send_CAN_frame(twai_message_t message){
+    wican_data_t can_data;
+    can_data.data_type = CAN_FRAME;
+    can_data.data = message;
+
+    send_to_all((uint8_t*)&can_data, sizeof(can_data));
+}
+
+
+// Make this a task that runs
+void parse_incoming(wican_data_t received_data){
+    // memcpy(&message, data, sizeof(twai_message_t));
+    switch (received_data.data_type)
+    {
+        case CAN_FRAME:
+        // twai_message_t message = received_data.data;
+        printf("CAN Message received\n");
+        // printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
+        // for (int i = 0; i < message.data_length_code; i++) {
+        //     printf("%d ", message.data[i]);
+        // }
+        // printf("\n");
+        break;
+
+        default:
+        ESP_LOGI("WIFI_PARSE", "Unknown Incoming Message Format");
+    }
+}

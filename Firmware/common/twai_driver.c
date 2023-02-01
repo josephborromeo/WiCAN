@@ -4,14 +4,20 @@
 #include "driver/twai.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
+
+#include "wifi.h"
+#include  "../WiCAN_TX/main/sdmmc_driver.h"     // FIXME
 
 
 //Initialize configuration structures using macro initializers
 twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(TWAI_TX_Pin, TWAI_RX_Pin, TWAI_MODE_NORMAL);       // Maybe change mode to TWAI_MODE_NO_ACK
 // Can change rx_queue_len in the g_config if we want a larger message queue
-
 twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
 twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
+
+// Create queue to process incoming CAN frames
+QueueHandle_t can_queue;
 
 void initCAN(void){
     //Install TWAI driver
@@ -29,10 +35,11 @@ void initCAN(void){
         printf("Failed to start CAN driver\n");
         return;
     }
+
 }
 
 void CAN_RX_Task(void*){
-    uint32_t rcv_counter = 0;
+    static uint32_t rcv_counter = 0;
     static uint32_t diff = 0;
     uint32_t last_time = pdTICKS_TO_MS(xTaskGetTickCount());
     /*
@@ -50,6 +57,12 @@ void CAN_RX_Task(void*){
             //     printf("%d ", message.data[i]);
             // }
             // printf("\n");
+
+            // See if we want to process std frames - always process extended frames
+            if ((PROCESS_STD_FRAMES && !message.extd) || message.extd){
+                xQueueSend(can_queue, &message, (TickType_t)0); 
+            }
+
             rcv_counter++;
         } 
         else {
@@ -68,4 +81,17 @@ void CAN_RX_Task(void*){
 
 void CAN_TX_Task(void*){
     // Take get input from queue and then send it out
+}
+
+void process_CAN_frame(void*) {
+    can_queue = xQueueCreate(PROCESS_QUEUE_SIZE, sizeof(twai_message_t));
+    // Send to SD card and Wifi tasks
+    twai_message_t message;
+    while (1) {
+        if( xQueueReceive(can_queue, &(message), (TickType_t)portMAX_DELAY)) {
+            send_CAN_frame(message);
+            // write_to_card();
+            // printf("received into process queue");
+        }
+    }
 }

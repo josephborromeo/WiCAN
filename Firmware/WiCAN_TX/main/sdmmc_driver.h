@@ -8,3 +8,5 @@
 
 void init_sd_card(void);
 void print_files(void);
+
+void write_to_card(void);

@@ -4,9 +4,12 @@
 #include "esp_netif.h"
 #include "esp_wifi.h"
 #include "esp_now.h"
+#include "driver/twai.h"
+
+#include "../common/data_types.h"
 
 
-#define CONFIG_ESPNOW_ENABLE_LONG_RANGE false       // TODO: Change to true
+#define CONFIG_ESPNOW_ENABLE_LONG_RANGE true       // TODO: Change to true
 
 #define ESPNOW_WIFI_MODE WIFI_MODE_STA
 #define ESPNOW_WIFI_IF   ESP_IF_WIFI_STA
@@ -23,15 +26,15 @@ static uint8_t receiver_mac_addresses[NUM_RECEIVERS][ESP_NOW_ETH_ALEN] = {
     // {0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
     };
 
-// Custom packet datastructure
-
-typedef struct{
-    char text[20];        // FIXME: Change to pointers and use malloc for string insertion
-} wican_data;
-
 void wifi_init(void);
 void espnow_init(void);
 void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status);
 void espnow_recv_cb(const uint8_t *mac, const uint8_t *data, int data_len);
 
-void send_data_task(void*);
+void test_send_data_task(void*);
+void send_to_all(const uint8_t *data, size_t len);
+
+void send_CAN_frame(twai_message_t message);
+void send_temp_data(void*);
+
+void parse_incoming(wican_data_t received_data);
