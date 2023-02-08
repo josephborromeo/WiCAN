@@ -8,7 +8,6 @@ Project Logs for */
 logs/
 Project Outputs for */
 output/
-build/
 __Previews/
 
 # web reports
@@ -46,6 +45,10 @@ __Previews/
 
 #debug log
 debug.log
+
+# ESP_IDF Things
+build/
+.vscode/
 
 ############
 ## Windows
