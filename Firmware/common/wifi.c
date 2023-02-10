@@ -85,9 +85,9 @@ void espnow_recv_cb(const uint8_t *mac, const uint8_t *data, int data_len){
     Send data to all receivers in list 
 */
 void send_to_all(const uint8_t *data, size_t len) {
-    // TODO: Get return value of esp_now_send and trigger LED light to change state
+    // TODO: Get return value of esp_now_send and trigger LED light to change state -- should be able to do this in send_cb
     for (uint8_t rx=0; rx<NUM_RECEIVERS; ++rx){
-        esp_now_send(receiver_mac_addresses[rx], data, len);            
+        esp_now_send(receiver_mac_addresses[rx], data, len);    // Change this so instead of using all receiver mac addresses, we only use the ones we connected to - populate another list/ vec 
     }
 }
 
