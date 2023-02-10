@@ -5,6 +5,8 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
+QueueHandle_t incoming_can_queue;
+
 void wifi_init(void) {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -57,24 +59,26 @@ void espnow_init(void) {
 }
 
 // Send and Receive Callbacks -- Keep these short
-
 void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {   // Just printout if error occurs - maybe disable
+    
+    // FIXME: Might be causing crashing when there is no receiver
+    
     if (mac_addr == NULL) {
         ESP_LOGI("send_cb", "Send cb arg error");
         return;
     }
 
     if (status==ESP_NOW_SEND_FAIL){
-        ESP_LOGI("send_cb", "espnow send fail");
+        // ESP_LOGI("send_cb", "espnow send fail");
+        // Set LED color here?
     }
 }
 
 void espnow_recv_cb(const uint8_t *mac, const uint8_t *data, int data_len){
     wican_data_t recv_data;
     memcpy(&recv_data, data, data_len);
-    parse_incoming(recv_data);
-
+    xQueueSend(incoming_can_queue, &recv_data, (TickType_t)0); 
 }
 
 /*
@@ -119,21 +123,26 @@ void send_CAN_frame(twai_message_t message){
 
 
 // Make this a task that runs
-void parse_incoming(wican_data_t received_data){
-    // memcpy(&message, data, sizeof(twai_message_t));
-    switch (received_data.data_type)
-    {
-        case CAN_FRAME:
-        twai_message_t message = received_data.data;
-        printf("CAN Message received\n");
-        printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
-        for (int i = 0; i < message.data_length_code; i++) {
-            printf("%d ", message.data[i]);
-        }
-        printf("\n");
-        break;
+void parse_incoming(void *){
+    incoming_can_queue = xQueueCreate(INCOMING_MSG_QUEUE_SIZE, sizeof(twai_message_t));
+    wican_data_t received_data;
+    while (1) {
+        if( xQueueReceive(incoming_can_queue, &(received_data), (TickType_t)portMAX_DELAY)) {
+            switch (received_data.data_type)
+            {
+                case CAN_FRAME:
+                twai_message_t message = received_data.data;
+                printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
+                for (int i = 0; i < message.data_length_code; i++) {
+                    printf("%d ", message.data[i]);
+                }
+                printf("\n");
+                break;
 
-        default:
-        ESP_LOGI("WIFI_PARSE", "Unknown Incoming Message Format");
+                default:
+                ESP_LOGI("WIFI_PARSE", "Unknown Incoming Message Format");
+            }
+        }
     }
+    
 }

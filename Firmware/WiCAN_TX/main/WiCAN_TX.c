@@ -69,7 +69,6 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( ret );
 
-
     config_led();
     config_func_button();
     ESP_LOGI(TAG, "Configured GPIO");
@@ -94,6 +93,5 @@ void app_main(void)
     xTaskCreate(&poll_board_temp, "Temp_Task", 2500, NULL, 2, NULL);
     xTaskCreate(&process_CAN_frame, "CAN_Process_Task", 8000, NULL, 8, NULL);
     xTaskCreate(&CAN_RX_Task, "CAN_RX_Task", 6000, NULL, 10, NULL);
-    xTaskCreate(&test_send_data_task, "ESP_NOW_TX_Task", 4000, NULL, 2, NULL);
-    
+    // xTaskCreate(&test_send_data_task, "ESP_NOW_TX_Task", 4000, NULL, 2, NULL);   
 }

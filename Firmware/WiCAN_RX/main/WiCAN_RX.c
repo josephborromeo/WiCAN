@@ -21,9 +21,6 @@ fix the CMakeLists.txt file to add EXTRA_COMPONENT_DIRS (?maybe?) so that we don
 //RX Specific Includes
 #include "usb_driver.h"
 
-
-
-
 static const char *TAG = "MAIN";
 
 #define func_btn_Pin 0
@@ -42,7 +39,6 @@ void app_main(void)
     config_led();
     ESP_LOGI(TAG, "Configured GPIO");
     
-    wifi_init();
 
     // usb_init();
 
@@ -50,5 +46,7 @@ void app_main(void)
 
     xTaskCreate(rainbow_cycle, "LED_Task", 2500, NULL, 5, NULL);
     xTaskCreate(&poll_board_temp, "Temp_Task", 2500, NULL, 5, NULL);
+    xTaskCreate(&parse_incoming, "CAN_Parse_Task", 5000, NULL, 8, NULL);
     
+    wifi_init();    // Start Wifi Last to avoid boot issues
 }

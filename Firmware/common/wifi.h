@@ -15,6 +15,7 @@
 #define ESPNOW_WIFI_IF   ESP_IF_WIFI_STA
 #define CONFIG_ESPNOW_CHANNEL 6
 
+#define INCOMING_MSG_QUEUE_SIZE 10
 
 // Transmitter MAC Address
 static uint8_t transmitter_mac_address[ESP_NOW_ETH_ALEN] = {0x70, 0x04, 0x1D, 0xA7, 0xF7, 0x94};
@@ -37,4 +38,4 @@ void send_to_all(const uint8_t *data, size_t len);
 void send_CAN_frame(twai_message_t message);
 void send_temp_data(void*);
 
-void parse_incoming(wican_data_t received_data);
+void parse_incoming(void *);
