@@ -72,7 +72,7 @@ void app_main(void)
     config_led();
     config_func_button();
     ESP_LOGI(TAG, "Configured GPIO");
-    init_sd_card();      // Fix this to not crash if no SD card is in/ not formatted
+    init_sd_card(); 
     initCAN();
     
     wifi_init();
