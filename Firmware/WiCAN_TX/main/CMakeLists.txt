@@ -6,6 +6,7 @@ idf_component_register(
         "../../common/temp_sensor.c"
         "../../common/twai_driver.c"
         "../../common/wifi.c"
+        "../../common/slcan.c"
                     
     INCLUDE_DIRS 
         "."

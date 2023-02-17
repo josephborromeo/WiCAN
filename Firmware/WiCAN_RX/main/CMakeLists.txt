@@ -5,6 +5,7 @@ idf_component_register(
         "../../common/rgb_led.c"
         "../../common/temp_sensor.c"
         "../../common/wifi.c"
+        "../../common/slcan.c"
                     
     INCLUDE_DIRS 
         "."
