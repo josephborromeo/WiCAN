@@ -1,0 +1,3 @@
+
+#define SOF 0xAA
+#define EOF 0xBB
