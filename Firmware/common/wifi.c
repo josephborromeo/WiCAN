@@ -6,7 +6,10 @@
 #include "freertos/queue.h"
 
 #include "slcan.h"
+
+#ifdef WiCAN_RX_Board
 #include "usb_driver.h"
+#endif
 
 QueueHandle_t incoming_can_queue;
 
@@ -107,12 +110,8 @@ void test_send_data_task(void*){
         message.data[i] = i;
     }
 
-
-    // const uint8_t *data = 64;
-
     while (1){
         send_CAN_frame(message);
-        // send_to_all(data, sizeof(data));
         vTaskDelay(pdMS_TO_TICKS(500));    // Sleep for 0.5s
     }
 }
@@ -144,8 +143,10 @@ void parse_incoming(void *){
                     // }
                     // printf("\n");
 
+                    #ifdef WiCAN_RX_Board
                     uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
                     write_to_usb((uint8_t *)&msg_buffer, length);
+                    #endif
 
                     // printf("%s", msg_buffer);
                     // printf("\n");
