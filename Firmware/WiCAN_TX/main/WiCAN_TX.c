@@ -18,7 +18,7 @@ fix the CMakeLists.txt file to add EXTRA_COMPONENT_DIRS (?maybe?) so that we don
 
 // Common Includes
 #include "../common/rgb_led.h"
-#include "../common/temp_sensor.h"SA
+#include "../common/temp_sensor.h"
 #include "../common/twai_driver.h"
 #include "../common/wifi.h"
 
@@ -93,5 +93,5 @@ void app_main(void)
     xTaskCreate(&poll_board_temp, "Temp_Task", 2500, NULL, 2, NULL);
     xTaskCreate(&process_CAN_frame, "CAN_Process_Task", 8000, NULL, 8, NULL);
     xTaskCreate(&CAN_RX_Task, "CAN_RX_Task", 6000, NULL, 10, NULL);
-    // xTaskCreate(&test_send_data_task, "ESP_NOW_TX_Task", 4000, NULL, 2, NULL);   
+    xTaskCreate(&test_send_data_task, "ESP_NOW_TX_Task", 4000, NULL, 2, NULL);   
 }

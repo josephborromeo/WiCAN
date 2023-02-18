@@ -5,6 +5,9 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
+#include "slcan.h"
+#include "usb_driver.h"
+
 QueueHandle_t incoming_can_queue;
 
 void wifi_init(void) {
@@ -70,7 +73,7 @@ void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
     }
 
     if (status==ESP_NOW_SEND_FAIL){
-        // ESP_LOGI("send_cb", "espnow send fail");
+        ESP_LOGI("send_cb", "espnow send fail");
         // Set LED color here?
     }
 }
@@ -78,7 +81,7 @@ void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 void espnow_recv_cb(const uint8_t *mac, const uint8_t *data, int data_len){
     wican_data_t recv_data;
     memcpy(&recv_data, data, data_len);
-    xQueueSend(incoming_can_queue, &recv_data, (TickType_t)0); 
+    xQueueSend(incoming_can_queue, &recv_data, (TickType_t)0);
 }
 
 /*
@@ -89,6 +92,7 @@ void send_to_all(const uint8_t *data, size_t len) {
     for (uint8_t rx=0; rx<NUM_RECEIVERS; ++rx){
         esp_now_send(receiver_mac_addresses[rx], data, len);    // Change this so instead of using all receiver mac addresses, we only use the ones we connected to - populate another list/ vec 
     }
+    printf("Sent Data\n");
 }
 
 void test_send_data_task(void*){
@@ -123,20 +127,28 @@ void send_CAN_frame(twai_message_t message){
 
 
 // Make this a task that runs
+// Only receiver should print out received message, transmitter should transmit on bus
 void parse_incoming(void *){
     incoming_can_queue = xQueueCreate(INCOMING_MSG_QUEUE_SIZE, sizeof(twai_message_t));
     wican_data_t received_data;
+    uint8_t msg_buffer[SLCAN_MTU]; // Max Length of SLCAN Message
     while (1) {
         if( xQueueReceive(incoming_can_queue, &(received_data), (TickType_t)portMAX_DELAY)) {
             switch (received_data.data_type)
             {
                 case CAN_FRAME:
-                twai_message_t message = received_data.data;
-                printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
-                for (int i = 0; i < message.data_length_code; i++) {
-                    printf("%d ", message.data[i]);
-                }
-                printf("\n");
+                    twai_message_t message = received_data.data;
+                    // printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
+                    // for (int i = 0; i < message.data_length_code; i++) {
+                    //     printf("%d ", message.data[i]);
+                    // }
+                    // printf("\n");
+
+                    uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
+                    write_to_usb((uint8_t *)&msg_buffer, length);
+
+                    // printf("%s", msg_buffer);
+                    // printf("\n");
                 break;
 
                 default:

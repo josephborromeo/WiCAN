@@ -1,8 +1,10 @@
+#include "driver/twai.h"
+
 // maximum rx buffer len: extended CAN frame with timestamp 
 #define SLCAN_MTU 30 // (sizeof("T1111222281122334455667788EA5F\r")+1)
 
-#define SLCAN_STD_ID_LEN 3
-#define SLCAN_EXT_ID_LEN 8
+#define SLCAN_STD_ID_LEN 3      // STD ID = 11 bits = 2.75 nibbles
+#define SLCAN_EXT_ID_LEN 8      // EXT ID = 29 bits = 7.25 nibbles
 
 
-const char* slcan_format(twai_message_t message);
+uint8_t slcan_format(uint8_t* msg_buffer, twai_message_t message);

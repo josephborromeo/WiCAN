@@ -40,13 +40,12 @@ void app_main(void)
     ESP_LOGI(TAG, "Configured GPIO");
     
 
-    // usb_init();
-
     printf("Minimum free heap size: %"PRIu32" bytes\n", esp_get_minimum_free_heap_size());
 
     xTaskCreate(rainbow_cycle, "LED_Task", 2500, NULL, 5, NULL);
-    xTaskCreate(&poll_board_temp, "Temp_Task", 2500, NULL, 5, NULL);
-    xTaskCreate(&parse_incoming, "CAN_Parse_Task", 5000, NULL, 8, NULL);
-    
+    // xTaskCreate(&poll_board_temp, "Temp_Task", 2500, NULL, 5, NULL);
+    xTaskCreate(&parse_incoming, "CAN_Parse_Task", 8000, NULL, 8, NULL);
+
+    usb_init();    
     wifi_init();    // Start Wifi Last to avoid boot issues
 }
