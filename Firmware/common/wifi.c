@@ -102,9 +102,11 @@ void test_send_data_task(void*){
     vTaskDelay(pdMS_TO_TICKS(1000));
     twai_message_t message;
     
-    message.identifier = 1234;
+    message.identifier = 68157961; // WSBFR_Sensors
     message.extd=1;
-    message.data_length_code = 8;
+    message.data_length_code = 6;
+
+    // Change this so that speeed changes as a sine wave
 
     for (int i = 0; i < message.data_length_code; i++) {
         message.data[i] = i;
