@@ -8,7 +8,7 @@ import cantools
 import can
 import can.interfaces.slcan as slcan
 
-run_duration = 10  # Seconds to run
+run_duration = 100  # Seconds to run
 
 port = "COM12"
 baudrate = 115200
@@ -20,7 +20,6 @@ db = cantools.database.load_file("../resources/2018CAR.dbc")
 print("Going to init bus")
 bus = slcan.slcanBus(channel=port, ttyBaudrate=baudrate, bitrate=500000)
 print("bus initialized")
-# bus.open()
 
 
 recv_data = []

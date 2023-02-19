@@ -1,6 +1,8 @@
 import serial
 import time
 import threading
+import cantools
+import can.interfaces.slcan as slcan
 
 
 class SerialData:
@@ -9,7 +11,7 @@ class SerialData:
         #   Maybe make it so that it can handle wireless connections as well? -- depends on FW
 
         # FIXME: Change port to self.find_port()
-        self.port = "COM6"
+        self.port = "COM12"
         self.baudrate = 115200
         self.serial_timeout = 0.02
 
@@ -19,7 +21,8 @@ class SerialData:
         self.data_buffer = ""
         self.print_buffer = []
 
-        self.ser = serial.Serial(self.port, self.baudrate, timeout=self.serial_timeout)
+        self.db = cantools.database.load_file("resources/2018CAR.dbc")
+        self.bus = slcan.slcanBus(channel=self.port, ttyBaudrate=self.baudrate, bitrate=500000)
         self.data = {}
 
         # Thread Params
@@ -36,36 +39,29 @@ class SerialData:
         # TODO: Implement
         pass
 
-    def parse_data(self, data_list):
+    def parse_data(self, signal_dict):
         # TODO: Implement dynamic typecasting - Currently casts everything to floats
         # TODO: Change this to parse CAN Messages
         # Takes in data
-        for data in data_list:
+        for signal in signal_dict:
             try:
-                self.print_buffer.append(data)
-                data = data.strip().split(self.delimiter)
+                data_val = signal_dict[signal]
 
-                if data[0] != '':
-                    for index in data:
-                        data_split = index.split(" ")
-                        data_key = data_split[0]
-                        data_val = data_split[1]
+                # Check if key exists in data dictionary
+                if signal in self.data.keys():
+                    # Ensure list does not grow too large:
+                    if len(self.data.get(signal)["x"]) >= self.max_data:
+                        self.data.get(signal)["x"] = self.data.get(signal)["x"][1:] + [time.clock()]
+                        self.data.get(signal)["y"] = self.data.get(signal)["y"][1:] + [float(data_val)]
+                    else:
+                        self.data.get(signal)["x"].append(time.clock())
+                        self.data.get(signal)["y"].append(float(data_val))
 
-                        # Check if key exists in data dictionary
-                        if data_key in self.data.keys():
-                            # Ensure list does not grow too large:
-                            if len(self.data.get(data_key)["x"]) >= self.max_data:
-                                self.data.get(data_key)["x"] = self.data.get(data_key)["x"][1:] + [time.clock()]
-                                self.data.get(data_key)["y"] = self.data.get(data_key)["y"][1:] + [float(data_val)]
-                            else:
-                                self.data.get(data_key)["x"].append(time.clock())
-                                self.data.get(data_key)["y"].append(float(data_val))
-
-                        else:
-                            # Add key and value to data dict
-                            self.data.update({data_key: {"x": [], "y": []}})
-                            self.data.get(data_key)["x"].append(time.clock())
-                            self.data.get(data_key)["y"].append(float(data_val))
+                else:
+                    # Add key and value to data dict
+                    self.data.update({signal: {"x": [], "y": []}})
+                    self.data.get(signal)["x"].append(time.clock())
+                    self.data.get(signal)["y"].append(float(data_val))
 
             except Exception as e:
                 # Handle bad data at start of connection
@@ -90,11 +86,17 @@ class SerialData:
         # TODO: Improve this to use some sort of timer instead of a sleep function
         while not self.threadStop:
             try:
-                self.data_buffer += self.ser.read(self.ser.inWaiting()).decode()
-                new_data = self.data_buffer.split("\r\n")
-                if len(new_data) >= 2:
-                    self.data_buffer = new_data[-1]
-                    self.parse_data(new_data[:-1])
+                message = self.bus.recv()
+
+                decoded_data = self.db.decode_message(
+                    message.arbitration_id,
+                    message.data,
+                    decode_choices = True,      # Might have to be false
+                    decode_containers = False,    # might have to be true and handle the different containers (possibly with cell temps
+                    allow_truncated=True,
+                )
+
+                self.parse_data(decoded_data)
 
             except Exception as e:
                 print(f"Caught {e} in pollingThread")
@@ -108,7 +110,7 @@ class SerialData:
         """
         self.threadStop = True
         time.sleep(self.thread_interval)
-        self.ser.close()
+        self.bus.close()
 
 
 # data = SerialData()

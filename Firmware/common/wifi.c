@@ -101,20 +101,30 @@ void send_to_all(const uint8_t *data, size_t len) {
 void test_send_data_task(void*){
     vTaskDelay(pdMS_TO_TICKS(1000));
     twai_message_t message;
-    
+    uint16_t speed = 200;
+    bool reverse = false;
+
     message.identifier = 68157961; // WSBFR_Sensors
     message.extd=1;
     message.data_length_code = 6;
 
     // Change this so that speeed changes as a sine wave
 
-    for (int i = 0; i < message.data_length_code; i++) {
-        message.data[i] = i;
+    for (int i = 0; i < 4; i++) {
+        message.data[i] = 0;
     }
 
     while (1){
+        speed += (5 - 10*reverse);
+        message.data[4] = speed & 0xFF;
+        message.data[5] = speed >> 8;
+
+        if (speed >= 800 || speed <= 200){
+            reverse = !reverse;
+        }
+
         send_CAN_frame(message);
-        vTaskDelay(pdMS_TO_TICKS(500));    // Sleep for 0.5s
+        vTaskDelay(pdMS_TO_TICKS(100));    // Sleep for 0.5s
     }
 }
 
