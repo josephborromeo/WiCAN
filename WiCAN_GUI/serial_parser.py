@@ -27,7 +27,7 @@ class SerialData:
 
         # Thread Params
         self.threadStop = False
-        self.thread_interval = 0.005      # TODO: Faster thread slows down gui
+        self.thread_interval = 0.002      # TODO: Faster thread slows down gui
         self.serial_thread = threading.Thread(target=self.pollingThread)
         self.serial_thread.start()
 
@@ -41,7 +41,6 @@ class SerialData:
 
     def parse_data(self, signal_dict):
         # TODO: Implement dynamic typecasting - Currently casts everything to floats
-        # TODO: Change this to parse CAN Messages
         # Takes in data
         for signal in signal_dict:
             try:
@@ -86,17 +85,18 @@ class SerialData:
         # TODO: Improve this to use some sort of timer instead of a sleep function
         while not self.threadStop:
             try:
-                message = self.bus.recv()
+                message = self.bus.recv(0.5)    # Need to Add timeout or else app wont close :(
 
-                decoded_data = self.db.decode_message(
-                    message.arbitration_id,
-                    message.data,
-                    decode_choices = True,      # Might have to be false
-                    decode_containers = False,    # might have to be true and handle the different containers (possibly with cell temps
-                    allow_truncated=True,
-                )
+                if message is not None:
+                    decoded_data = self.db.decode_message(
+                        message.arbitration_id,
+                        message.data,
+                        decode_choices=False,   # TODO: Handle signals with text choices
+                        decode_containers=False,    # might have to be true and handle the different containers (possibly with cell temps
+                        allow_truncated=True,
+                    )
 
-                self.parse_data(decoded_data)
+                    self.parse_data(decoded_data)
 
             except Exception as e:
                 print(f"Caught {e} in pollingThread")

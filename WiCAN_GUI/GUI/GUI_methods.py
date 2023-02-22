@@ -103,13 +103,16 @@ class CanLiveDataView:
             if key not in self.displayed_signals.keys() and len(data.get(key).get("x")) > 5:
                 numRows = self.add_row()
                 self.table.setItem(numRows, 3, QtWidgets.QTableWidgetItem(key))  # Signal
-                self.table.setItem(numRows, 4, QtWidgets.QTableWidgetItem(str(data.get(key).get("y")[-1])))  # Value
+
+                val = "{0:.2f}".format(data.get(key).get("y")[-1])
+                self.table.setItem(numRows, 4, QtWidgets.QTableWidgetItem(str(val)))  # Value
                 self.displayed_signals.update({key: numRows})
 
             elif len(data.get(key).get("x")) > 5:
                 # Has already been added, just update values
                 row = self.displayed_signals.get(key)
-                self.table.item(row, 4).setText(str(data.get(key).get("y")[-1]))
+                val = "{0:.2f}".format(data.get(key).get("y")[-1])
+                self.table.item(row, 4).setText(val)
 
     def add_row(self):
         # Create a empty row at bottom of table
