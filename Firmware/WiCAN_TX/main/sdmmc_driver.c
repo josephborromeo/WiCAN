@@ -33,7 +33,6 @@ void init_sd_card(void){
 
     sdmmc_card_t *card;
 
-
     const char mount_point[] = MOUNT_POINT;
 
     ESP_LOGI(TAG, "Mounting filesystem");
