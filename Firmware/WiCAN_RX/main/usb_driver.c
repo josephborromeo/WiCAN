@@ -5,6 +5,8 @@
 #include "sdkconfig.h"
 #include "esp_log.h"
 #include "string.h"
+#include "driver/twai.h"
+#include "slcan.h"
 
 #define ITF_NUM_CDC    0
 
@@ -46,6 +48,11 @@ void tinyusb_cdc_rx_callback(int itf, cdcacm_event_t *event)
     // write_to_usb((uint8_t*)&buf);
     
     // FIXME: Currently only returns a carriage return (\r)
+    twai_message_t message;
+
+    int8_t ret;
+    ret = slcan_parse_str(buf, rx_size, &message);
+
     send_cr();
 }
 

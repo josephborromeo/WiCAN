@@ -62,12 +62,11 @@ uint8_t slcan_format(uint8_t* msg_buffer, twai_message_t message){
 }
 
 // Parse an incoming slcan command from the USB CDC port
-uint8_t slcan_parse_str(uint8_t *buf, uint8_t len){
-	twai_message_t message;
+uint8_t slcan_parse_str(uint8_t *buf, uint8_t len, twai_message_t* message){
 
 	// Default to extended ID unless otherwise specified
-    message.extd = 1;
-    message.identifier = 0;
+    message->extd = 1;
+    message->identifier = 0;
 
 
     // Convert from ASCII (2nd character to end)
@@ -162,9 +161,11 @@ uint8_t slcan_parse_str(uint8_t *buf, uint8_t len){
 		// }
 
         case 't':
-            message.extd = 0;
+            message->extd = 0;
+            break;
 		case 'T':
-	    	message.extd = 1;
+	    	message->extd = 1;
+            break;
 
 		// case 't':
 		// 	// Transmit data frame command
@@ -188,10 +189,10 @@ uint8_t slcan_parse_str(uint8_t *buf, uint8_t len){
 
     // Save CAN ID depending on ID type
     uint8_t msg_position = 1;
-    if (messsae.extd == 1) {
+    if (message->extd == 1) {
         while (msg_position <= SLCAN_EXT_ID_LEN) {
-        	message.identifier *= 16;
-        	message.identifier += buf[msg_position++];
+        	message->identifier *= 16;
+        	message->identifier += buf[msg_position++];
         }
     }
     /*   TODO: Implement Stanard IDs    */
@@ -204,22 +205,21 @@ uint8_t slcan_parse_str(uint8_t *buf, uint8_t len){
 
 
     // Attempt to parse DLC and check sanity
-    message.data_length_code = buf[msg_position++];
-    if (message.data_length_code > 8) {
+    message->data_length_code = buf[msg_position++];
+    if (message->data_length_code > 8) {
         return 0;
     }
 
     // Copy frame data to buffer
-    uint8_t frame_data[8] = {0};
-    for (uint8_t j = 0; j < message.data_length_code; j++) {
-        frame_data[j] = (buf[msg_position] << 4) + buf[msg_position+1];
+    for (uint8_t i = 0; i < message->data_length_code; i++) {
+        message->data[i] = (buf[msg_position] << 4) + buf[msg_position+1];
         msg_position += 2;
     }
 
     // Transmit the message
 
     // Add twai_message_t pointer to params and just update that - do not want to send from here
-    can_tx(&frame_header, frame_data);
+    // can_tx(&frame_header, frame_data);
 
     return 0;
 }
