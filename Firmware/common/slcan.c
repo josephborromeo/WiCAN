@@ -216,10 +216,12 @@ uint8_t slcan_parse_str(uint8_t *buf, uint8_t len, twai_message_t* message){
         msg_position += 2;
     }
 
-    // Transmit the message
+    // Transmit the message over Wi-Fi
 
     // Add twai_message_t pointer to params and just update that - do not want to send from here
     // can_tx(&frame_header, frame_data);
+
+    // Call function like : send_can_to_tx
 
     return 0;
 }
