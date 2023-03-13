@@ -36,6 +36,8 @@ void test_send_data_task(void*);
 void send_to_all(const uint8_t *data, size_t len);
 
 void send_CAN_frame(twai_message_t message);
+void send_CAN_frame_to_Tx(twai_message_t message);
+
 void send_temp_data(void*);
 
 void parse_incoming(void *);

@@ -1,4 +1,5 @@
 #include "wifi.h"
+#include "twai_driver.h"
 
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -136,6 +137,13 @@ void send_CAN_frame(twai_message_t message){
     send_to_all((uint8_t*)&can_data, sizeof(can_data));
 }
 
+void send_CAN_frame_to_Tx(twai_message_t message){
+    wican_data_t can_data;
+    can_data.data_type = CAN_FRAME;
+    can_data.data = message;
+
+    esp_now_send(transmitter_mac_address, (uint8_t*)&can_data, sizeof(can_data));
+}
 
 // Make this a task that runs
 // Only receiver should print out received message, transmitter should transmit on bus
@@ -158,6 +166,12 @@ void parse_incoming(void *){
                     #ifdef WiCAN_RX_Board
                     uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
                     write_to_usb((uint8_t *)&msg_buffer, length);
+                    #endif
+
+                    #ifdef WiCAN_TX_Board
+                    xQueueSend(tx_can_queue, &message, (TickType_t)0);
+                    // Send received CAN message on the bus
+
                     #endif
 
                     // printf("%s", msg_buffer);

@@ -16,8 +16,6 @@ twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(TWAI_TX_Pin, TWAI_R
 twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
 twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
-// Create queue to process incoming CAN frames
-QueueHandle_t can_queue;
 
 void initCAN(void){
     //Install TWAI driver
@@ -51,16 +49,9 @@ void CAN_RX_Task(void*){
     while (1){
         twai_message_t message;
         if (twai_receive(&message, pdMS_TO_TICKS(RX_Timeout)) == ESP_OK) {
-            // printf("Message received\n");
-            // printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
-            // for (int i = 0; i < message.data_length_code; i++) {
-            //     printf("%d ", message.data[i]);
-            // }
-            // printf("\n");
-
             // See if we want to process std frames - always process extended frames
             if ((PROCESS_STD_FRAMES && !message.extd) || message.extd){
-                xQueueSend(can_queue, &message, (TickType_t)0); 
+                xQueueSend(rx_can_queue, &message, (TickType_t)0); 
             }
 
             rcv_counter++;
@@ -80,15 +71,26 @@ void CAN_RX_Task(void*){
 }
 
 void CAN_TX_Task(void*){
-    // Take get input from queue and then send it out
+    tx_can_queue = xQueueCreate(PROCESS_QUEUE_SIZE, sizeof(twai_message_t));
+    while (1){
+        twai_message_t message;
+        if(xQueueReceive(tx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
+            // Send CAN message onto bus
+            if (twai_transmit(&message, pdMS_TO_TICKS(1000)) == ESP_OK) {
+                printf("Message queued for transmission\n");
+            } else {
+                printf("Failed to queue message for transmission\n");
+            }
+        }
+    }
 }
 
 void process_CAN_frame(void*) {
-    can_queue = xQueueCreate(PROCESS_QUEUE_SIZE, sizeof(twai_message_t));
+    rx_can_queue = xQueueCreate(PROCESS_QUEUE_SIZE, sizeof(twai_message_t));
     // Send to SD card and Wifi tasks
     twai_message_t message;
     while (1) {
-        if( xQueueReceive(can_queue, &(message), (TickType_t)portMAX_DELAY)) {
+        if( xQueueReceive(rx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
             send_CAN_frame(message);
             // write_to_card();
             // printf("received into process queue");
