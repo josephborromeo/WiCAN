@@ -16,6 +16,8 @@ twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(TWAI_TX_Pin, TWAI_R
 twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
 twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
+// Create queue to process incoming CAN frames
+QueueHandle_t rx_can_queue, tx_can_queue;
 
 void initCAN(void){
     //Install TWAI driver

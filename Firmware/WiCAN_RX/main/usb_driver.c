@@ -50,8 +50,8 @@ void tinyusb_cdc_rx_callback(int itf, cdcacm_event_t *event)
     // FIXME: Currently only returns a carriage return (\r)
     twai_message_t message;
 
-    int8_t ret;
-    ret = slcan_parse_str(buf, rx_size, &message);
+    int8_t ret_err;
+    ret_err = slcan_parse_str(buf, rx_size, &message);
 
     send_cr();
 }

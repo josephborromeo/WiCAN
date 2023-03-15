@@ -11,8 +11,7 @@
 
 #define PROCESS_STD_FRAMES false
 
-// Create queue to process incoming CAN frames
-QueueHandle_t rx_can_queue, tx_can_queue;
+extern QueueHandle_t tx_can_queue;
 
 
 void initCAN(void);

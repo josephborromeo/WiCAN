@@ -8,4 +8,4 @@
 
 
 uint8_t slcan_format(uint8_t* msg_buffer, twai_message_t message);
-uint8_t slcan_parse_str(uint8_t *buf, uint8_t len, twai_message_t* message);
+int8_t slcan_parse_str(uint8_t *buf, uint8_t len, twai_message_t* message);

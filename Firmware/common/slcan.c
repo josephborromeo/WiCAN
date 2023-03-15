@@ -1,5 +1,5 @@
 #include "slcan.h"
-
+#include "wifi.h"
 
 // Convert Incoming CAN message into SLCAN formatted "string"
 // Currently only supports extended IDs - TODO: Support std ids
@@ -62,7 +62,7 @@ uint8_t slcan_format(uint8_t* msg_buffer, twai_message_t message){
 }
 
 // Parse an incoming slcan command from the USB CDC port
-uint8_t slcan_parse_str(uint8_t *buf, uint8_t len, twai_message_t* message){
+int8_t slcan_parse_str(uint8_t *buf, uint8_t len, twai_message_t* message){
 
 	// Default to extended ID unless otherwise specified
     message->extd = 1;
@@ -222,6 +222,7 @@ uint8_t slcan_parse_str(uint8_t *buf, uint8_t len, twai_message_t* message){
     // can_tx(&frame_header, frame_data);
 
     // Call function like : send_can_to_tx
+    send_CAN_frame_to_Tx(*message);
 
     return 0;
 }
