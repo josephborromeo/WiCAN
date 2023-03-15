@@ -51,6 +51,7 @@ void init_sd_card(void){
 
 void print_files(void){
     DIR *dir = opendir(MOUNT_POINT);
+
     struct dirent *dp;
 
     while ((dp = readdir(dir)) != NULL) {
@@ -59,4 +60,5 @@ void print_files(void){
     }
     closedir(dir);
     printf("DIR CLOSED\n");
+
 }
