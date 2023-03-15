@@ -78,7 +78,14 @@ void CAN_TX_Task(void*){
         twai_message_t message;
         if(xQueueReceive(tx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
             // Send CAN message onto bus
-            if (twai_transmit(&message, pdMS_TO_TICKS(1000)) == ESP_OK) {
+            // printf("Wireless Message received\n");
+            // printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
+            // for (int i = 0; i < message.data_length_code; i++) {
+            //     printf("%d ", message.data[i]);
+            // }
+            // printf("\n");
+
+            if (twai_transmit(&message, pdMS_TO_TICKS(10)) == ESP_OK) {
                 printf("Message queued for transmission\n");
             } else {
                 printf("Failed to queue message for transmission\n");

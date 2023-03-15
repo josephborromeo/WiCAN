@@ -92,7 +92,6 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len, twai_message_t* message){
 			// can_enable();
 
             // TODO: Implement
-
 			return 0;
 
 		case 'C':
@@ -194,6 +193,9 @@ int8_t slcan_parse_str(uint8_t *buf, uint8_t len, twai_message_t* message){
         	message->identifier *= 16;
         	message->identifier += buf[msg_position++];
         }
+    }
+    else{
+        return 0;
     }
     /*   TODO: Implement Stanard IDs    */
     // else {

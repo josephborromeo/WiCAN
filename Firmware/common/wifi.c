@@ -96,7 +96,7 @@ void send_to_all(const uint8_t *data, size_t len) {
     for (uint8_t rx=0; rx<NUM_RECEIVERS; ++rx){
         esp_now_send(receiver_mac_addresses[rx], data, len);    // Change this so instead of using all receiver mac addresses, we only use the ones we connected to - populate another list/ vec 
     }
-    printf("Sent Data\n");
+    // printf("Sent Data\n");
 }
 
 void test_send_data_task(void*){
@@ -145,10 +145,9 @@ void send_CAN_frame_to_Tx(twai_message_t message){
     esp_now_send(transmitter_mac_address, (uint8_t*)&can_data, sizeof(can_data));
 }
 
-// Make this a task that runs
 // Only receiver should print out received message, transmitter should transmit on bus
 void parse_incoming(void *){
-    incoming_can_queue = xQueueCreate(INCOMING_MSG_QUEUE_SIZE, sizeof(twai_message_t));
+    incoming_can_queue = xQueueCreate(INCOMING_MSG_QUEUE_SIZE, sizeof(wican_data_t));
     wican_data_t received_data;
     uint8_t msg_buffer[SLCAN_MTU]; // Max Length of SLCAN Message
     while (1) {
@@ -157,11 +156,6 @@ void parse_incoming(void *){
             {
                 case CAN_FRAME:
                     twai_message_t message = received_data.data;
-                    // printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
-                    // for (int i = 0; i < message.data_length_code; i++) {
-                    //     printf("%d ", message.data[i]);
-                    // }
-                    // printf("\n");
 
                     #ifdef WiCAN_RX_Board
                     uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
@@ -171,11 +165,8 @@ void parse_incoming(void *){
                     #ifdef WiCAN_TX_Board
                     xQueueSend(tx_can_queue, &message, (TickType_t)0);
                     // Send received CAN message on the bus
-
                     #endif
 
-                    // printf("%s", msg_buffer);
-                    // printf("\n");
                 break;
 
                 default:
