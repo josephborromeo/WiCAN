@@ -62,3 +62,16 @@ void print_files(void){
     printf("DIR CLOSED\n");
 
 }
+
+/*
+    Writes line to SD card `.log` file using the same format as candump on linux to make it compatible
+    with our CANlogGUI software
+
+    Example formatted line in .log file:
+     (0946685107.875001)  can1  18C00401   [8]  0F BC 32 C1 32 B8 32 00
+     (timestamp_seconds)  bus  messageID   [DLC]  D7 D6 D5 D4 D3 D2 D1 D0
+*/
+void write_to_sd(twai_message_t message){
+
+
+}

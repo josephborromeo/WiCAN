@@ -85,11 +85,11 @@ void CAN_TX_Task(void*){
             // }
             // printf("\n");
 
-            if (twai_transmit(&message, pdMS_TO_TICKS(10)) == ESP_OK) {
-                printf("Message queued for transmission\n");
-            } else {
-                printf("Failed to queue message for transmission\n");
-            }
+            if (twai_transmit(&message, pdMS_TO_TICKS(10)) == ESP_OK) {}
+                // printf("Message queued for transmission\n");
+            // } else {
+            //     printf("Failed to queue message for transmission\n");
+            // }
         }
     }
 }

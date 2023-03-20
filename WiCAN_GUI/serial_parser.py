@@ -12,7 +12,7 @@ class SerialData:
 
         # FIXME: Change port to self.find_port()
         self.port = "COM12"
-        self.baudrate = 115200
+        self.baudrate = 230400
         self.serial_timeout = 0.02
 
         # FIXME: Increase this once the plot window size settings is changed
@@ -27,7 +27,7 @@ class SerialData:
 
         # Thread Params
         self.threadStop = False
-        self.thread_interval = 0.002      # TODO: Faster thread slows down gui
+        self.thread_interval = 0.001      # TODO: Faster thread slows down gui
         self.serial_thread = threading.Thread(target=self.pollingThread)
         self.serial_thread.start()
 

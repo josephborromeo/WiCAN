@@ -1,4 +1,5 @@
 #include "driver/sdmmc_host.h"
+#include "driver/twai.h"
 
 /*
  *  CAN Logs Format: Follows candump general output + timestamp at the front 
@@ -15,4 +16,5 @@
 void init_sd_card(void);
 void print_files(void);
 
+void write_to_sd(twai_message_t message);
 void log_CAN_messages(void *);

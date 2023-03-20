@@ -10,8 +10,8 @@ import can.interfaces.slcan as slcan
 
 run_duration = 100  # Seconds to run
 
-port = "COM13"
-baudrate = 115200
+port = "COM12"
+baudrate = 250000
 serial_timeout = 0.05
 
 # ser = serial.Serial(port, baudrate, timeout=serial_timeout)
@@ -25,8 +25,8 @@ print("bus initialized")
 recv_data = []
 data_buff = ""
 
-tx_msg = db.get_message_by_name("WSBFR_Sensors")
-msg_data = tx_msg.encode({"FR_WheelDistance": 100, "FR_Speed": 20})
+tx_msg = db.get_message_by_name("DCU_buttonEvents")
+msg_data = tx_msg.encode({"ButtonEnduranceToggleEnabled":0, "ButtonEnduranceLapEnabled":0, "ButtonTCEnabled":0, "ButtonHVEnabled": 1, "ButtonEMEnabled": 0})
 
 msg = can.Message(arbitration_id=tx_msg.frame_id, data=msg_data, is_extended_id=True)
 bus.open()
@@ -40,16 +40,17 @@ bus.open()
 # msg_data = tx_msg.encode({"UartOverCanConfigSignal": 100})
 # msg = can.Message(arbitration_id=tx_msg.frame_id, data=msg_data)
 
-
+#
 time.sleep(0.02)
 bus.send(msg)
-time.sleep(0.02)
-bus.send(msg)
-time.sleep(0.02)
-bus.send(msg)
-time.sleep(0.02)
-bus.send(msg)
-time.sleep(0.02)
+print("send msg")
+# time.sleep(0.02)
+# bus.send(msg)
+# time.sleep(0.02)
+# bus.send(msg)
+# time.sleep(0.02)
+# bus.send(msg)
+# time.sleep(0.02)
 
 
 
