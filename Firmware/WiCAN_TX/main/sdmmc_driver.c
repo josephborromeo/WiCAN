@@ -8,6 +8,8 @@
 #include "sdmmc_cmd.h"
 #include "driver/sdmmc_host.h"
 #include "dirent.h"
+#include "freertos/FreeRTOS.h"
+#include "regex.h"
 
 #include "esp_log.h"
 
@@ -51,16 +53,23 @@ void init_sd_card(void){
 
 void print_files(void){
     DIR *dir = opendir(MOUNT_POINT);
+    uint16_t log_num = 0;
 
     struct dirent *dp;
 
     while ((dp = readdir(dir)) != NULL) {
-        printf("File found: %s\n", dp->d_name);
-
+        if (dp->d_type == DT_REG){
+            // printf("File: %s\n", dp->d_name);
+            if (sscanf(dp->d_name, "%*[^0123456789]%hd", &log_num)){
+                // printf("Log Num: %u\n", log_num);
+            }
+        }
     }
     closedir(dir);
     printf("DIR CLOSED\n");
 
+    log_num++;
+    printf("New Log File: %s_%u.log\n", LOG_NAME, log_num);
 }
 
 /*
@@ -72,6 +81,13 @@ void print_files(void){
      (timestamp_seconds)  bus  messageID   [DLC]  D7 D6 D5 D4 D3 D2 D1 D0
 */
 void write_to_sd(twai_message_t message){
+    // Do this somewhere else V
+    FILE * fp; 
+    fp = fopen("/sdcard/filename.log", "a");
 
-
+    fprintf(fp, " (%.4f)  %s  %lX   [%u]  ", pdTICKS_TO_MS(xTaskGetTickCount())*1000.0, "can1", message.identifier, message.data_length_code);
+    for (int i = 0; i < message.data_length_code; i++) {
+        fprintf(fp, "%X ", message.data[i]);
+    }
+    fprintf(fp, "\n");
 }

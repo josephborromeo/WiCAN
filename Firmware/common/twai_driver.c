@@ -101,8 +101,7 @@ void process_CAN_frame(void*) {
     while (1) {
         if( xQueueReceive(rx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
             send_CAN_frame(message);
-            // write_to_card();
-            // printf("received into process queue");
+            // write_to_sd(message);
         }
     }
 }
