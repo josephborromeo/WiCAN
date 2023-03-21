@@ -1,5 +1,7 @@
+#include <stdio.h>
 #include "driver/sdmmc_host.h"
 #include "driver/twai.h"
+
 
 /*
  *  CAN Logs Format: Follows candump general output + timestamp at the front 
@@ -8,13 +10,14 @@
 */
 
 // Use defines for pin numbers probably
-
-#define MOUNT_POINT "/sdcard"
+#define MOUNT_POINT "/sd"
 
 #define LOG_NAME "CANlog"
 
+extern FILE * fp;
+
 void init_sd_card(void);
-void print_files(void);
+void create_log_file(void);
 
 void write_to_sd(twai_message_t message);
 void log_CAN_messages(void *);

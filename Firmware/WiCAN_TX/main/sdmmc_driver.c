@@ -9,10 +9,13 @@
 #include "driver/sdmmc_host.h"
 #include "dirent.h"
 #include "freertos/FreeRTOS.h"
+#include "errno.h"
 
 #include "esp_log.h"
 
 static const char *TAG = "SD";
+
+FILE * fp;
 
 void init_sd_card(void){
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
@@ -41,18 +44,20 @@ void init_sd_card(void){
 
     if (ret != ESP_OK) {
         ESP_LOGI(TAG, "Failed to mount card");
+        // TODO: Set LED to RED or something to show error
 
     } else{
         ESP_LOGI(TAG, "SD Card mounted successfully!");
-        sdmmc_card_print_info(stdout, card);
-        print_files();
+        // sdmmc_card_print_info(stdout, card);
+        create_log_file();
     }   
 
 }
 
-void print_files(void){
+void create_log_file(void){
     DIR *dir = opendir(MOUNT_POINT);
-    char log_name[32];
+    uint8_t name_len = 32;
+    char log_name[name_len];
     uint16_t log_num = 0;
     uint16_t temp_num = 0;
 
@@ -63,28 +68,27 @@ void print_files(void){
         if (dp->d_type == DT_REG){
             if (sscanf(dp->d_name, "%*[^0123456789]%hu", &temp_num)){
                 if (temp_num > log_num) log_num = temp_num;
-                printf("Log Num: %u\n", log_num);
+                // printf("Log Num: %u\n", log_num);
             }
         }
     }
     closedir(dir);
-    printf("DIR CLOSED\n");
+    // printf("DIR CLOSED\n");
 
     log_num++;
-    sprintf(log_name, "%s/%s_%u.log", MOUNT_POINT, LOG_NAME, log_num);
+    snprintf(log_name, name_len, "%s/%s%u.log", MOUNT_POINT, LOG_NAME, log_num);
     printf("New Log File: %s\n", log_name);
 
-    FILE * fp;
-    printf("Opening new file %s\n", log_name);
-    fp = fopen(log_name, "wb");
-    if (fp != NULL){
-        printf("New file Opened\n");
-        fprintf(fp, "Hello!\nThis is Log file #%u!", log_num);
-        printf("New file Written\n");
-        fclose(fp);
-    }
-    else{
+    
+    fp = fopen(log_name, "w");
+    setvbuf(fp, NULL, _IONBF, 0);   // Disable buffering so it write immediately 
+    if (fp == NULL){
         printf("Failed to Open File\n");
+        printf( "Error code opening file: %d\n", errno );
+        printf( "Error opening file: %s\n", strerror( errno ) );
+        // TODO: Set LED to RED or something to show error
+    }else{
+        printf("Log file created successfully\n");
     }
     
 }
@@ -98,13 +102,12 @@ void print_files(void){
      (timestamp_seconds)  bus  messageID   [DLC]  D7 D6 D5 D4 D3 D2 D1 D0
 */
 void write_to_sd(twai_message_t message){
-    // Do this somewhere else V
-    FILE * fp; 
-    fp = fopen("/sdcard/filename.log", "w");
 
-    fprintf(fp, " (%.4f)  %s  %lX   [%u]  ", pdTICKS_TO_MS(xTaskGetTickCount())*1000.0, "can1", message.identifier, message.data_length_code);
+    fprintf(fp, " (%.4f)  %s  %lX   [%u] ", pdTICKS_TO_MS(xTaskGetTickCount())/1000.0, "can1", message.identifier, message.data_length_code);
     for (int i = 0; i < message.data_length_code; i++) {
-        fprintf(fp, "%X ", message.data[i]);
+        fprintf(fp, " %02X", message.data[i]);
     }
+
     fprintf(fp, "\n");
+    fsync(fileno(fp));
 }
