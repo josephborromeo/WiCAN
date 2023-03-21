@@ -9,7 +9,6 @@
 #include "driver/sdmmc_host.h"
 #include "dirent.h"
 #include "freertos/FreeRTOS.h"
-#include "regex.h"
 
 #include "esp_log.h"
 
@@ -53,15 +52,18 @@ void init_sd_card(void){
 
 void print_files(void){
     DIR *dir = opendir(MOUNT_POINT);
+    char log_name[32];
     uint16_t log_num = 0;
+    uint16_t temp_num = 0;
 
     struct dirent *dp;
 
     while ((dp = readdir(dir)) != NULL) {
+        printf("File: %s\n", dp->d_name);
         if (dp->d_type == DT_REG){
-            // printf("File: %s\n", dp->d_name);
-            if (sscanf(dp->d_name, "%*[^0123456789]%hd", &log_num)){
-                // printf("Log Num: %u\n", log_num);
+            if (sscanf(dp->d_name, "%*[^0123456789]%hu", &temp_num)){
+                if (temp_num > log_num) log_num = temp_num;
+                printf("Log Num: %u\n", log_num);
             }
         }
     }
@@ -69,7 +71,22 @@ void print_files(void){
     printf("DIR CLOSED\n");
 
     log_num++;
-    printf("New Log File: %s_%u.log\n", LOG_NAME, log_num);
+    sprintf(log_name, "%s/%s_%u.log", MOUNT_POINT, LOG_NAME, log_num);
+    printf("New Log File: %s\n", log_name);
+
+    FILE * fp;
+    printf("Opening new file %s\n", log_name);
+    fp = fopen(log_name, "wb");
+    if (fp != NULL){
+        printf("New file Opened\n");
+        fprintf(fp, "Hello!\nThis is Log file #%u!", log_num);
+        printf("New file Written\n");
+        fclose(fp);
+    }
+    else{
+        printf("Failed to Open File\n");
+    }
+    
 }
 
 /*
@@ -83,7 +100,7 @@ void print_files(void){
 void write_to_sd(twai_message_t message){
     // Do this somewhere else V
     FILE * fp; 
-    fp = fopen("/sdcard/filename.log", "a");
+    fp = fopen("/sdcard/filename.log", "w");
 
     fprintf(fp, " (%.4f)  %s  %lX   [%u]  ", pdTICKS_TO_MS(xTaskGetTickCount())*1000.0, "can1", message.identifier, message.data_length_code);
     for (int i = 0; i < message.data_length_code; i++) {
