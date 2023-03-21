@@ -12,7 +12,7 @@
 // Use defines for pin numbers probably
 #define MOUNT_POINT "/sd"
 
-#define LOG_NAME "CANlog"
+#define LOG_NAME "CANlog_"
 
 extern FILE * fp;
 
