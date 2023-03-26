@@ -1,5 +1,6 @@
 #include "wifi.h"
 #include "twai_driver.h"
+#include <stdbool.h>
 
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -77,7 +78,7 @@ void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
     }
 
     if (status==ESP_NOW_SEND_FAIL){
-        ESP_LOGI("send_cb", "espnow send fail");
+        // ESP_LOGI("send_cb", "espnow send fail");
         // Set LED color here?
     }
 }
@@ -92,10 +93,42 @@ void espnow_recv_cb(const uint8_t *mac, const uint8_t *data, int data_len){
     Send data to all receivers in list 
 */
 void send_to_all(const uint8_t *data, size_t len) {
+    static esp_err_t ret = ESP_OK;
+    static uint8_t err_count = 0;
+    static uint32_t err_timer;
+    static bool send_ok = true;                                                                                      
     // TODO: Get return value of esp_now_send and trigger LED light to change state -- should be able to do this in send_cb
-    for (uint8_t rx=0; rx<NUM_RECEIVERS; ++rx){
-        esp_now_send(receiver_mac_addresses[rx], data, len);    // Change this so instead of using all receiver mac addresses, we only use the ones we connected to - populate another list/ vec 
+
+    if (send_ok){
+        for (uint8_t rx=0; rx<NUM_RECEIVERS; ++rx){
+            ret = esp_now_send(receiver_mac_addresses[rx], data, len);    // Change this so instead of using all receiver mac addresses, we only use the ones we connected to - populate another list/ vec 
+            bool peer_exists = esp_now_is_peer_exist(receiver_mac_addresses[rx]);
+            ESP_LOGI("send", "Peer exists: %u", peer_exists);
+
+        }
+
+        if (ret != ESP_OK){
+            err_count++;
+            ESP_LOGI("send", "%s", esp_err_to_name(ret));
+        }
     }
+
+    else{
+        if (pdTICKS_TO_MS(xTaskGetTickCount()) - err_timer > 5000){     // Wait 5 seconds before retrying after failing
+            send_ok = true;
+            
+        }
+    }
+
+    if (err_count > 50){
+        err_timer = pdTICKS_TO_MS(xTaskGetTickCount());
+        send_ok = false;
+        err_count = 0;
+    }
+    
+    
+
+    
     // printf("Sent Data\n");
 }
 

@@ -7,7 +7,7 @@
 #define RX_Timeout portMAX_DELAY
 
 // Set max number of can frames to store in process queue
-#define PROCESS_QUEUE_SIZE 10
+#define PROCESS_QUEUE_SIZE 25
 
 #define PROCESS_STD_FRAMES false
 
