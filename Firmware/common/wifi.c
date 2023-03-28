@@ -114,9 +114,8 @@ void send_to_all(const uint8_t *data, size_t len) {
     }
 
     else{
-        if (pdTICKS_TO_MS(xTaskGetTickCount()) - err_timer > 5000){     // Wait 5 seconds before retrying after failing
+        if (pdTICKS_TO_MS(xTaskGetTickCount()) - err_timer > 30000){     // Wait 30 seconds before retrying after failing
             send_ok = true;
-            
         }
     }
 
