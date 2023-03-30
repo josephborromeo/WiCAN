@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1139</width>
+    <width>1262</width>
     <height>811</height>
    </rect>
   </property>
@@ -24,7 +24,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="usesScrollButtons">
        <bool>true</bool>
@@ -72,13 +72,13 @@
        <widget class="QWidget" name="verticalLayoutWidget">
         <property name="geometry">
          <rect>
-          <x>200</x>
+          <x>280</x>
           <y>0</y>
           <width>911</width>
           <height>621</height>
          </rect>
         </property>
-        <layout class="QVBoxLayout" name="plotLayout" stretch="">
+        <layout class="QVBoxLayout" name="plotLayout">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -108,7 +108,7 @@
          <rect>
           <x>310</x>
           <y>630</y>
-          <width>801</width>
+          <width>881</width>
           <height>91</height>
          </rect>
         </property>
@@ -133,7 +133,7 @@
          <rect>
           <x>10</x>
           <y>60</y>
-          <width>181</width>
+          <width>251</width>
           <height>561</height>
          </rect>
         </property>
@@ -159,48 +159,102 @@
          <rect>
           <x>30</x>
           <y>20</y>
-          <width>1051</width>
+          <width>1181</width>
           <height>451</height>
          </rect>
         </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <column>
          <property name="text">
-          <string>CAN-ID</string>
+          <string notr="true">CAN-ID</string>
+         </property>
+         <property name="toolTip">
+          <string notr="true"/>
+         </property>
+         <property name="whatsThis">
+          <string notr="true"/>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>DLC</string>
+          <string notr="true">DLC</string>
+         </property>
+         <property name="toolTip">
+          <string notr="true"/>
+         </property>
+         <property name="whatsThis">
+          <string notr="true"/>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>Symbol</string>
+          <string notr="true">Symbol</string>
+         </property>
+         <property name="toolTip">
+          <string notr="true"/>
+         </property>
+         <property name="whatsThis">
+          <string notr="true"/>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>Signal</string>
+          <string notr="true">Signal</string>
+         </property>
+         <property name="toolTip">
+          <string notr="true"/>
+         </property>
+         <property name="whatsThis">
+          <string notr="true"/>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>Value</string>
+          <string notr="true">Value</string>
+         </property>
+         <property name="toolTip">
+          <string notr="true"/>
+         </property>
+         <property name="whatsThis">
+          <string notr="true"/>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>Units</string>
+          <string notr="true">Units</string>
+         </property>
+         <property name="toolTip">
+          <string notr="true"/>
+         </property>
+         <property name="whatsThis">
+          <string notr="true"/>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>Cycle Time</string>
+          <string notr="true">Cycle Time [s]</string>
+         </property>
+         <property name="toolTip">
+          <string notr="true"/>
+         </property>
+         <property name="whatsThis">
+          <string notr="true"/>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>Receive Count</string>
+          <string notr="true">Receive Count</string>
+         </property>
+         <property name="toolTip">
+          <string notr="true"/>
+         </property>
+         <property name="whatsThis">
+          <string notr="true"/>
          </property>
         </column>
        </widget>
@@ -333,6 +387,37 @@
          <string>resources/2018CAR.dbc</string>
         </property>
        </widget>
+       <widget class="QLabel" name="label_5">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>60</y>
+          <width>101</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Signal Duration:</string>
+        </property>
+       </widget>
+       <widget class="QSlider" name="horizontalSlider">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>60</y>
+          <width>160</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
       </widget>
      </widget>
     </item>
@@ -343,7 +428,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1139</width>
+     <width>1262</width>
      <height>21</height>
     </rect>
    </property>

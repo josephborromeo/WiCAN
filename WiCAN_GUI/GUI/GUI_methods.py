@@ -95,6 +95,14 @@ class CanLiveDataView:
 
         # TODO: Setup column widths, font sizes, etc.
 
+        self.column_widths = [80, 80, 80, 200, 130, 80, 100, 100]
+
+        self.set_col_widths()
+
+    def set_col_widths(self):
+        for column, width in enumerate(self.column_widths):
+            self.table.setColumnWidth(column, width)
+
     def update_items(self, data):
         # Signal Column = index 3
         # Value Column = index 4
