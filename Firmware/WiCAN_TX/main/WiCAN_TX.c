@@ -24,9 +24,8 @@ fix the CMakeLists.txt file to add EXTRA_COMPONENT_DIRS (?maybe?) so that we don
 
 //TX Specific Includes
 #include "sdmmc_driver.h"
+#include "usb_msc.h"
 
-
-static const char *TAG = "MAIN";
 
 #define func_btn_Pin 0
 #define ESP_INTR_FLAG_DEFAULT 0
@@ -71,9 +70,10 @@ void app_main(void)
 
     config_led();
     config_func_button();
-    ESP_LOGI(TAG, "Configured GPIO");
+    ESP_LOGI("Main", "Configured GPIO");
     init_sd_card(); 
     initCAN();
+    // usb_msc_init();
     
     wifi_init();
     

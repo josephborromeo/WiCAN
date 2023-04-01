@@ -12,10 +12,13 @@
 #include "errno.h"
 
 #include "esp_log.h"
+#include "esp_check.h"
 
 static const char *TAG = "SD";
 
 FILE * fp;
+bool s_fat_mounted;
+sdmmc_card_t *card;
 
 void init_sd_card(void){
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
@@ -35,7 +38,6 @@ void init_sd_card(void){
         .allocation_unit_size = 16 * 1024
     };
 
-    sdmmc_card_t *card;
 
     const char mount_point[] = MOUNT_POINT;
 
@@ -44,10 +46,12 @@ void init_sd_card(void){
 
     if (ret != ESP_OK) {
         ESP_LOGI(TAG, "Failed to mount card");
+        s_fat_mounted = false;
         // TODO: Set LED to RED or something to show error
 
     } else{
         ESP_LOGI(TAG, "SD Card mounted successfully!");
+        s_fat_mounted = true;
         // sdmmc_card_print_info(stdout, card);
         create_log_file();
     }   
@@ -110,4 +114,45 @@ void write_to_sd(twai_message_t message){
 
     fprintf(fp, "\n");
     fsync(fileno(fp));
+}
+
+
+/*
+SD Card sector funcs - used for USB MSC
+*/
+
+uint32_t storage_get_sector_count(void) {
+    assert(card);
+
+    return (uint32_t)card->csd.capacity;
+}
+
+uint32_t storage_get_sector_size(void) {
+    assert(card);
+
+    return (uint32_t)card->csd.sector_size;
+}
+
+esp_err_t storage_read_sector(uint32_t lba, uint32_t offset, size_t size, void *dest) {
+    assert(card);
+    return sdmmc_read_sectors(card, dest, lba, size / storage_get_sector_size());
+}
+
+esp_err_t storage_write_sector(uint32_t lba, uint32_t offset, size_t size, const void *src) {
+    assert(card);
+
+    if (s_fat_mounted) {
+        ESP_LOGE(TAG, "can't write, FAT mounted");
+        return ESP_ERR_INVALID_STATE;
+    }
+    size_t addr = lba * storage_get_sector_size() + offset; // Address of the data to be read, relative to the beginning of the partition.
+    size_t sector_size = card->csd.sector_size;
+    if (addr % sector_size != 0 || size % sector_size != 0) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    ESP_RETURN_ON_ERROR(sdmmc_erase_sectors(card, lba, size / storage_get_sector_size(), SDMMC_ERASE_ARG),
+                        TAG, "Failed to erase");
+
+    return sdmmc_write_sectors(card, src, lba, size / storage_get_sector_size());
 }
