@@ -6,6 +6,7 @@ from PyQt5 import QtGui, QtCore, QtWidgets, uic
 import pyqtgraph as pg
 from pyqtgraph.ptime import time as ptime
 import numpy as np
+import can
 
 from serial_parser import SerialData
 from GUI.config_parser import get_dbc_path
@@ -129,6 +130,52 @@ class CanLiveDataView:
         return numRows
 
 
+class CanSendTable:
+    def __init__(self, tableView: QtWidgets.QTableWidget, signal_selector: QtWidgets.QComboBox, database, bus):
+        self.table = tableView
+        self.db = database
+        self.bus = bus
+        self.signal_box = signal_selector
+
+        self.column_widths = [270, 150]
+        self.set_col_widths()
+
+        self.CAN_message = None
+        self.signal_box.currentIndexChanged.connect(self.update_signal_table)
+
+        # Add messages to combo box
+        for msg in self.db.messages:
+            self.signal_box.addItem(msg.name)
+
+    def set_col_widths(self):
+        for column, width in enumerate(self.column_widths):
+            self.table.setColumnWidth(column, width)
+
+    def update_signal_table(self):
+        self.table.clearContents()
+        for row in range(self.table.rowCount()):
+            self.table.removeRow(0)
+
+        self.CAN_message = self.db.get_message_by_name(self.signal_box.currentText())
+
+        numRows = len(self.CAN_message.signals)
+        for row in range(numRows):
+            self.table.insertRow(row)
+
+        for index, signal in enumerate(self.CAN_message.signals):
+            self.table.setItem(index, 0, QtWidgets.QTableWidgetItem(signal.name))
+            self.table.setItem(index, 1, QtWidgets.QTableWidgetItem("0"))
+
+    def send_msg(self):
+        signals = {}
+        numRows = len(self.CAN_message.signals)
+        for row in range(numRows):
+            signals.update({self.table.item(row, 0).text(): float(self.table.item(row, 1).text())})
+        data = self.CAN_message.encode(signals)
+        message = can.Message(arbitration_id=self.CAN_message.frame_id, data=data)
+        self.bus.send(message)
+
+
 class CanSignalTable:
     def __init__(self, treeView: QtWidgets.QTreeWidget):
         self.tree = treeView
@@ -183,6 +230,7 @@ class Ui(QtWidgets.QMainWindow):
         # Create signal selector for GUI
         self.signal_table = CanSignalTable(self.can_signal_tree)
         self.data_table = CanLiveDataView(self.CANdataTable)
+        self.send_data_table = CanSendTable(self.CAN_sendDataTable, self.CAN_msg_selector, self.data.db, self.data.bus)
 
         # Setup Table of Signals
         # TODO: Make class for signal table
@@ -211,6 +259,7 @@ class Ui(QtWidgets.QMainWindow):
         # Connect Buttons
         self.play_pause_btn.clicked.connect(self.toggle_pause)
         self.dbc_filediag_btn.clicked.connect(self.get_dbc_path)
+        self.send_msg_btn.clicked.connect(self.send_data_table.send_msg)
 
     def update_plot(self):
         self.data_plotter.update_plot(self.signal_table.get_selected())
