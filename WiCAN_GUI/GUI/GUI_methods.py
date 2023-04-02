@@ -182,6 +182,10 @@ class CanSignalTable:
         self.display_signals = []
         self.selected_signals = []
 
+        # Enable Sorting
+        self.tree.setSortingEnabled(True)
+        self.tree.sortByColumn(0, 0)    # Sort order is ascending
+
     def update_items(self, data_keys):
         """
         :param data_keys: Keys from main data dict - don't care about actual data so save space/ increase speed
