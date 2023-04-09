@@ -4,7 +4,6 @@ import time
 
 from PyQt5 import QtGui, QtCore, QtWidgets, uic
 import pyqtgraph as pg
-from pyqtgraph.ptime import time as ptime
 import numpy as np
 import can
 
@@ -224,7 +223,7 @@ class Ui(QtWidgets.QMainWindow):
         uic.loadUi('GUI/main_window.ui', self)
 
         self.frame_rate = 0
-        self.fps_time = ptime()
+        self.fps_time = time.perf_counter()
 
         self.data = SerialData()
         self.data_plotter = LiveDataPlot(self.data)
@@ -286,7 +285,7 @@ class Ui(QtWidgets.QMainWindow):
         self.dbc_path_textedit.moveCursor(QtGui.QTextCursor.End)
 
     def fps_counter(self):
-        now = ptime()
+        now = time.perf_counter()
         dt = now - self.fps_time
         self.fps_time = now
         if self.frame_rate is None:
