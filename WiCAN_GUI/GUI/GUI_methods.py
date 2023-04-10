@@ -7,8 +7,8 @@ import pyqtgraph as pg
 import numpy as np
 import can
 
-from serial_parser import SerialData
 from GUI.config_parser import get_dbc_path
+from serial_parser import SerialData
 
 class LiveDataPlot:
     def __init__(self, data):
@@ -218,14 +218,14 @@ class CanSignalTable:
 
 
 class Ui(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self, data_handler):
         super(Ui, self).__init__()
         uic.loadUi('GUI/main_window.ui', self)
 
         self.frame_rate = 0
         self.fps_time = time.perf_counter()
 
-        self.data = SerialData()
+        self.data = data_handler 
         self.data_plotter = LiveDataPlot(self.data)
 
         self.plotLayout.addWidget(self.data_plotter.plot_window)
@@ -233,7 +233,11 @@ class Ui(QtWidgets.QMainWindow):
         # Create signal selector for GUI
         self.signal_table = CanSignalTable(self.can_signal_tree)
         self.data_table = CanLiveDataView(self.CANdataTable)
-        self.send_data_table = CanSendTable(self.CAN_sendDataTable, self.CAN_msg_selector, self.data.db, self.data.bus)
+
+        supports_tx = isinstance(data_handler, SerialData)
+
+        if supports_tx:
+            self.send_data_table = CanSendTable(self.CAN_sendDataTable, self.CAN_msg_selector, self.data.db, self.data.bus)
 
         # Setup Table of Signals
         # TODO: Make class for signal table
@@ -262,13 +266,14 @@ class Ui(QtWidgets.QMainWindow):
         # Connect Buttons
         self.play_pause_btn.clicked.connect(self.toggle_pause)
         self.dbc_filediag_btn.clicked.connect(self.get_dbc_path)
-        self.send_msg_btn.clicked.connect(self.send_data_table.send_msg)
+        if supports_tx:
+            self.send_msg_btn.clicked.connect(self.send_data_table.send_msg)
 
     def update_plot(self):
         self.data_plotter.update_plot(self.signal_table.get_selected())
 
     def update_time(self):
-        self.CurrTimeLabel.setText(f"Current Time: {time.clock():.2f}s")
+        self.CurrTimeLabel.setText(f"Current Time: {time.perf_counter():.2f}s")
 
     def toggle_pause(self):
         self.pause_graph = not self.pause_graph
@@ -315,9 +320,9 @@ class Ui(QtWidgets.QMainWindow):
         self.data.stop_thread()
 
 
-def start_GUI():
+def start_GUI(file_handler):
     app = QtWidgets.QApplication(sys.argv)  # Create an instance of QtWidgets.QApplication
-    window = Ui()  # Create an instance of our class
+    window = Ui(file_handler)  # Create an instance of our class
     # Ensure threads are stopped on window close
     app.aboutToQuit.connect(window.on_close_handler)
     app.exec_()  # Start the application

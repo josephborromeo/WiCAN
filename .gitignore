@@ -63,3 +63,6 @@ Desktop.ini
 # Mac crap
 .DS_Store
 *.icloud
+
+# Python
+__pycache__
