@@ -1,11 +1,13 @@
+#!/usr/bin/env python
 from GUI.GUI_methods import start_GUI
 import argparse
 from serial_parser import SerialData
 from file_parser import FileData
+import pathlib
 
 def main():
     parser = argparse.ArgumentParser(prog="WiCAN", description="CAN Log Visualizer")
-    parser.add_argument('-f', '--file')
+    parser.add_argument('-f', '--file', type=pathlib.Path)
     args = parser.parse_args()
 
     if args.file is not None:
