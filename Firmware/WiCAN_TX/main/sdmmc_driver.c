@@ -22,6 +22,10 @@ sdmmc_card_t *card;
 
 void init_sd_card(void){
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+
+    // Set SDMMC speed to 40MHz
+    host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
+
     sdmmc_slot_config_t slot = SDMMC_SLOT_CONFIG_DEFAULT();
 
     slot.clk = 37;
@@ -52,7 +56,7 @@ void init_sd_card(void){
     } else{
         ESP_LOGI(TAG, "SD Card mounted successfully!");
         s_fat_mounted = true;
-        // sdmmc_card_print_info(stdout, card);
+        sdmmc_card_print_info(stdout, card);
         create_log_file();
     }   
 
