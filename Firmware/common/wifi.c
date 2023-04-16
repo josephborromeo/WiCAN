@@ -26,6 +26,9 @@ void wifi_init(void) {
     ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE)); // No power saving
     ESP_ERROR_CHECK( esp_wifi_start());
     ESP_ERROR_CHECK( esp_wifi_set_channel(CONFIG_ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE));
+    
+    // FIXME: Test this out, increased RX receive rate
+    // ESP_ERROR_CHECK(esp_wifi_config_espnow_rate(ESP_IF_WIFI_STA, WIFI_PHY_RATE_54M));
 
 #if CONFIG_ESPNOW_ENABLE_LONG_RANGE
     ESP_ERROR_CHECK( esp_wifi_set_protocol(ESPNOW_WIFI_IF, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR) );
@@ -88,17 +91,10 @@ void espnow_recv_cb(const uint8_t *mac, const uint8_t *data, int data_len){
     wican_data_t recv_data;
     memcpy(&recv_data, data, data_len);
 
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-    if (xQueueSendFromISR(incoming_can_queue, &recv_data, &xHigherPriorityTaskWoken) != pdTRUE){
+    if (xQueueSend(incoming_can_queue, &recv_data, (TickType_t)0 ) != pdTRUE){
         printf("queue full\n");
     }
 
-    if( xHigherPriorityTaskWoken )
-    {
-        /* Actual macro used here is port specific. */
-        portYIELD_FROM_ISR();
-    }
 }
 
 /*

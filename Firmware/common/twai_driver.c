@@ -53,9 +53,9 @@ void CAN_RX_Task(void*){
         if (twai_receive(&message, pdMS_TO_TICKS(RX_Timeout)) == ESP_OK) {
             // See if we want to process std frames - always process extended frames
             if ((PROCESS_STD_FRAMES && !message.extd) || message.extd){
-                if (xQueueSend(rx_can_queue, &message, (TickType_t)portMAX_DELAY) != pdTRUE){   // Change timeout to 0 to check if queue is full
-                    printf("Wifi Queue Full\n");
-                }  // Try changing to 0
+                // if (xQueueSend(rx_can_queue, &message, (TickType_t)portMAX_DELAY) != pdTRUE){   // Change timeout to 0 to check if queue is full
+                //     printf("Wifi Queue Full\n");
+                // }  // Try changing to 0
                 if (xQueueSend(sd_can_queue, &message, (TickType_t)portMAX_DELAY) != pdTRUE){
                     printf("SD Queue Full\n");
                 }  // Try changing to 0
