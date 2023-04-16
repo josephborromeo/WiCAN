@@ -9,13 +9,13 @@
 #include "../common/data_types.h"
 
 
-#define CONFIG_ESPNOW_ENABLE_LONG_RANGE true       // TODO: Change to true
+#define CONFIG_ESPNOW_ENABLE_LONG_RANGE false       // TODO: Change to true
 
 #define ESPNOW_WIFI_MODE WIFI_MODE_STA
 #define ESPNOW_WIFI_IF   ESP_IF_WIFI_STA
 #define CONFIG_ESPNOW_CHANNEL 6
 
-#define INCOMING_MSG_QUEUE_SIZE 10
+#define INCOMING_MSG_QUEUE_SIZE 250
 
 // Transmitter MAC Address
 static uint8_t transmitter_mac_address[ESP_NOW_ETH_ALEN] = {0x70, 0x04, 0x1D, 0xA7, 0xF7, 0x94};

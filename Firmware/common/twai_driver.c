@@ -17,7 +17,7 @@ twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
 twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
 // Create queue to process incoming CAN frames
-QueueHandle_t rx_can_queue, tx_can_queue;
+QueueHandle_t rx_can_queue, tx_can_queue, sd_can_queue;
 
 void initCAN(void){
     //Install TWAI driver
@@ -53,7 +53,12 @@ void CAN_RX_Task(void*){
         if (twai_receive(&message, pdMS_TO_TICKS(RX_Timeout)) == ESP_OK) {
             // See if we want to process std frames - always process extended frames
             if ((PROCESS_STD_FRAMES && !message.extd) || message.extd){
-                xQueueSend(rx_can_queue, &message, (TickType_t)portMAX_DELAY);  // Try changing to 0
+                if (xQueueSend(rx_can_queue, &message, (TickType_t)portMAX_DELAY) != pdTRUE){   // Change timeout to 0 to check if queue is full
+                    printf("Wifi Queue Full\n");
+                }  // Try changing to 0
+                if (xQueueSend(sd_can_queue, &message, (TickType_t)portMAX_DELAY) != pdTRUE){
+                    printf("SD Queue Full\n");
+                }  // Try changing to 0
                 rcv_counter++;
             }
             
@@ -104,15 +109,39 @@ void process_CAN_frame(void*) {
     while (1) {
         if( xQueueReceive(rx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
             send_CAN_frame(message);     // This causes board to reset when USB is not connected and receiver is not connected
-            write_to_sd(message);
+            // write_to_sd(message);
             rcv_counter++;
 
             diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
             if (diff >= 1000){  // Print message every second
-                printf("%.2f Process msgs / second\n", (((float)rcv_counter/diff)*1000.0));
+                printf("%.2f Wifi msgs / second\n", (((float)rcv_counter/diff)*1000.0));
                 rcv_counter = 0;
                 last_time = pdTICKS_TO_MS(xTaskGetTickCount());
             }
         }
     }
 }
+
+void sd_write_task(void*) {
+    sd_can_queue = xQueueCreate(PROCESS_QUEUE_SIZE, sizeof(twai_message_t));
+
+    twai_message_t message;
+    static uint32_t rcv_counter = 0;
+    uint32_t last_time = pdTICKS_TO_MS(xTaskGetTickCount());
+    static uint32_t diff = 0;
+    while (1) {
+        if( xQueueReceive(sd_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
+            // send_CAN_frame(message);     // This causes board to reset when USB is not connected and receiver is not connected
+            write_to_sd(message);
+            rcv_counter++;
+
+            diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
+            if (diff >= 1000){  // Print message every second
+                printf("%.2f sd msgs / second\n", (((float)rcv_counter/diff)*1000.0));
+                rcv_counter = 0;
+                last_time = pdTICKS_TO_MS(xTaskGetTickCount());
+            }
+        }
+    }
+}
+

@@ -87,7 +87,18 @@ void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 void espnow_recv_cb(const uint8_t *mac, const uint8_t *data, int data_len){
     wican_data_t recv_data;
     memcpy(&recv_data, data, data_len);
-    xQueueSend(incoming_can_queue, &recv_data, (TickType_t)0);
+
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    if (xQueueSendFromISR(incoming_can_queue, &recv_data, &xHigherPriorityTaskWoken) != pdTRUE){
+        printf("queue full\n");
+    }
+
+    if( xHigherPriorityTaskWoken )
+    {
+        /* Actual macro used here is port specific. */
+        portYIELD_FROM_ISR();
+    }
 }
 
 /*
@@ -195,21 +206,21 @@ void parse_incoming(void *){
                     twai_message_t message = received_data.data;
 
                     #ifdef WiCAN_RX_Board
-                    // rcv_counter++;
+                    rcv_counter++;
 
-                    // diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
-                    // if (diff >= 1000){  // Print message every second
-                    //     // printf("%.2f msgs / second\n", (((float)rcv_counter/diff)*1000.0));
-                    //     // length = sprintf(scan_buf, "%.1fmsgs/s\n>", (((float)rcv_counter/diff)*1000.0));
+                    diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
+                    if (diff >= 1000){  // Print message every second
+                        printf("%.2f msgs / second\n", (((float)rcv_counter/diff)*1000.0));
+                        length = sprintf(scan_buf, "%.1fmsgs/s\n>", (((float)rcv_counter/diff)*1000.0));
                     //     // tinyusb_cdcacm_write_queue(0, (uint8_t*)scan_buf, length);
                     //     // tinyusb_cdcacm_write_flush(0, portMAX_DELAY);
 
-                    //     rcv_counter = 0;
-                    //     last_time = pdTICKS_TO_MS(xTaskGetTickCount());
+                        rcv_counter = 0;
+                        last_time = pdTICKS_TO_MS(xTaskGetTickCount());
                         
-                    // }
-                    uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
-                    write_to_usb((uint8_t *)&msg_buffer, length);
+                    }
+                    // uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
+                    // write_to_usb((uint8_t *)&msg_buffer, length);
 
                     #endif
 
