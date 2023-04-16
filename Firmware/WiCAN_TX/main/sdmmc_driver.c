@@ -35,7 +35,7 @@ void init_sd_card(void){
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
         .format_if_mount_failed = false,
         .max_files = 5,
-        .allocation_unit_size = 16 * 1024
+        .allocation_unit_size = 64 * 512        // 512 is sector size. 128x sector size is max
     };
 
 
@@ -85,7 +85,7 @@ void create_log_file(void){
 
     
     fp = fopen(log_name, "w");
-    setvbuf(fp, NULL, _IONBF, 0);   // Disable buffering so it write immediately 
+    setvbuf(fp, NULL, _IOFBF, 64 * 512);   // Set Buffer so it doesn't constantly write 
     if (fp == NULL){
         printf("Failed to Open File\n");
         printf( "Error code opening file: %d\n", errno );

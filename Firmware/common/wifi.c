@@ -11,6 +11,7 @@
 
 #ifdef WiCAN_RX_Board
 #include "usb_driver.h"
+#include "tusb_cdc_acm.h"
 #endif
 
 QueueHandle_t incoming_can_queue;
@@ -78,7 +79,7 @@ void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
     }
 
     if (status==ESP_NOW_SEND_FAIL){
-        // ESP_LOGI("send_cb", "espnow send fail");
+        ESP_LOGI("send_cb", "espnow send fail");
         // Set LED color here?
     }
 }
@@ -103,18 +104,18 @@ void send_to_all(const uint8_t *data, size_t len) {
         for (uint8_t rx=0; rx<NUM_RECEIVERS; ++rx){
             ret = esp_now_send(receiver_mac_addresses[rx], data, len);    // Change this so instead of using all receiver mac addresses, we only use the ones we connected to - populate another list/ vec 
             bool peer_exists = esp_now_is_peer_exist(receiver_mac_addresses[rx]);
-            ESP_LOGI("send", "Peer exists: %u", peer_exists);
+            // ESP_LOGI("send", "Peer exists: %u", peer_exists);
 
         }
 
         if (ret != ESP_OK){
             err_count++;
-            ESP_LOGI("send", "%s", esp_err_to_name(ret));
+            // ESP_LOGI("send", "%s", esp_err_to_name(ret));
         }
     }
 
     else{
-        if (pdTICKS_TO_MS(xTaskGetTickCount()) - err_timer > 30000){     // Wait 30 seconds before retrying after failing
+        if (pdTICKS_TO_MS(xTaskGetTickCount()) - err_timer > 5000){     // Wait 5 seconds before retrying after failing
             send_ok = true;
         }
     }
@@ -124,9 +125,6 @@ void send_to_all(const uint8_t *data, size_t len) {
         send_ok = false;
         err_count = 0;
     }
-    
-    
-
     
     // printf("Sent Data\n");
 }
@@ -182,6 +180,13 @@ void parse_incoming(void *){
     incoming_can_queue = xQueueCreate(INCOMING_MSG_QUEUE_SIZE, sizeof(wican_data_t));
     wican_data_t received_data;
     uint8_t msg_buffer[SLCAN_MTU]; // Max Length of SLCAN Message
+    static uint32_t rcv_counter = 0;
+    uint32_t last_time = pdTICKS_TO_MS(xTaskGetTickCount());
+    static uint32_t diff = 0;
+
+    char *scan_buf = (char *)malloc(64);
+    size_t length = 0; 
+
     while (1) {
         if( xQueueReceive(incoming_can_queue, &(received_data), (TickType_t)portMAX_DELAY)) {
             switch (received_data.data_type)
@@ -190,8 +195,22 @@ void parse_incoming(void *){
                     twai_message_t message = received_data.data;
 
                     #ifdef WiCAN_RX_Board
+                    // rcv_counter++;
+
+                    // diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
+                    // if (diff >= 1000){  // Print message every second
+                    //     // printf("%.2f msgs / second\n", (((float)rcv_counter/diff)*1000.0));
+                    //     // length = sprintf(scan_buf, "%.1fmsgs/s\n>", (((float)rcv_counter/diff)*1000.0));
+                    //     // tinyusb_cdcacm_write_queue(0, (uint8_t*)scan_buf, length);
+                    //     // tinyusb_cdcacm_write_flush(0, portMAX_DELAY);
+
+                    //     rcv_counter = 0;
+                    //     last_time = pdTICKS_TO_MS(xTaskGetTickCount());
+                        
+                    // }
                     uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
                     write_to_usb((uint8_t *)&msg_buffer, length);
+
                     #endif
 
                     #ifdef WiCAN_TX_Board

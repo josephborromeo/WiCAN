@@ -12,8 +12,8 @@ class SerialData:
 
         # FIXME: Change port to self.find_port()
         self.port = "COM12"
-        self.baudrate = 230400
-        self.serial_timeout = 0.02
+        self.baudrate = 1000000
+        self.serial_timeout = 0.001
 
         # FIXME: Increase this once the plot window size settings is changed
         self.max_data = 1000       # Max number of datapoints to store in each array
@@ -27,7 +27,7 @@ class SerialData:
 
         # Thread Params
         self.threadStop = False
-        self.thread_interval = 0.001      # TODO: Faster thread slows down gui
+        self.thread_interval = 0.0005      # TODO: Faster thread slows down gui
         self.serial_thread = threading.Thread(target=self.pollingThread)
         self.serial_thread.start()
 
@@ -64,7 +64,8 @@ class SerialData:
 
             except Exception as e:
                 # Handle bad data at start of connection
-                print("Caught", e)
+                # print("Caught", e)
+                pass
 
         return None
 
@@ -83,11 +84,19 @@ class SerialData:
         """
 
         # TODO: Improve this to use some sort of timer instead of a sleep function
+        count = 0
+        start_time = time.perf_counter()
         while not self.threadStop:
             try:
-                message = self.bus.recv(0.5)    # Need to Add timeout or else app wont close :(
+                message = self.bus.recv(None)    # Need to Add timeout or else app wont close :(
 
                 if message is not None:
+                    count += 1
+
+                    if time.perf_counter()-start_time >= 1:
+                        print(f"{count} msgs/s")
+                        count = 0
+                        start_time = time.perf_counter()
                     decoded_data = self.db.decode_message(
                         message.arbitration_id,
                         message.data,
@@ -99,7 +108,9 @@ class SerialData:
                     self.parse_data(decoded_data)
 
             except Exception as e:
-                print(f"Caught {e} in pollingThread")
+                # TODO: Handle not in DBC
+                # print(f"Caught {e} in pollingThread")
+                pass
 
             time.sleep(self.thread_interval)
 

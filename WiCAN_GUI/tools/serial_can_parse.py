@@ -8,10 +8,10 @@ import cantools
 import can
 import can.interfaces.slcan as slcan
 
-run_duration = 300  # Seconds to run
+run_duration = 120  # Seconds to run
 
 port = "COM12"
-baudrate = 250000
+baudrate = 1000000
 serial_timeout = 0.05
 
 # ser = serial.Serial(port, baudrate, timeout=serial_timeout)
@@ -32,7 +32,7 @@ data_buff = ""
 # bus.open()
 # bus.close()
 
-bus.open()
+# bus.open()
 
 
 
@@ -58,11 +58,14 @@ print("Going into loop")
 start_time = time.perf_counter()
 num_msg = 0
 while time.perf_counter() < run_duration:
-    message = bus.recv()
+    try:
+        message = bus.recv(None)
+    except Exception:
+        print("exception")
     num_msg += 1
 
-    if time.perf_counter() - start_time > 2:
-        print(f"{float(num_msg) / (time.perf_counter() - start_time)} msgs / s")
+    if time.perf_counter() - start_time > 1:
+        print(f"{float(num_msg) / (time.perf_counter() - start_time):.2f} msgs / s")
         num_msg = 0
         start_time = time.perf_counter()
 
