@@ -104,7 +104,7 @@ void process_CAN_frame(void*) {
     while (1) {
         if( xQueueReceive(rx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
             send_CAN_frame(message);     // This causes board to reset when USB is not connected and receiver is not connected
-            // write_to_sd(message);
+            write_to_sd(message);
             rcv_counter++;
 
             diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
