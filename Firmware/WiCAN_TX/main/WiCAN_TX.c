@@ -75,7 +75,7 @@ void app_main(void)
     initCAN();
     // usb_msc_init();
     
-    // wifi_init();
+    wifi_init();
     
     //create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
@@ -91,7 +91,7 @@ void app_main(void)
     // xTaskCreate(&cycle_led, "LED_Task", 2050, NULL, 5, NULL);
     xTaskCreate(rainbow_cycle, "LED_Task", 2500, NULL, 2, NULL);
     // xTaskCreate(&poll_board_temp, "Temp_Task", 2500, NULL, 2, NULL);
-    // xTaskCreate(&process_CAN_frame, "CAN_Process_Task", 8000, NULL, 8, NULL);
+    xTaskCreate(&process_CAN_frame, "CAN_Process_Task", 8000, NULL, 8, NULL);
     xTaskCreate(&sd_write_task, "SD_Write_Task", 8000, NULL, 8, NULL);
     xTaskCreate(&CAN_RX_Task, "CAN_RX_Task", 6000, NULL, 10, NULL);
     xTaskCreate(&CAN_TX_Task, "CAN_TX_Task", 6000, NULL, 10, NULL);

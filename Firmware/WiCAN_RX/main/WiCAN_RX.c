@@ -46,6 +46,6 @@ void app_main(void)
     // xTaskCreate(&poll_board_temp, "Temp_Task", 2500, NULL, 5, NULL);
     xTaskCreate(&parse_incoming, "CAN_Parse_Task", 8000, NULL, 8, NULL);
 
-    // usb_init();    
+    usb_init();    
     wifi_init();    // Start Wifi Last to avoid boot issues
 }

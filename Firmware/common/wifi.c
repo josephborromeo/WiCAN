@@ -107,7 +107,7 @@ void send_to_all(const uint8_t *data, size_t len) {
     static bool send_ok = true;                                                                                      
     // TODO: Get return value of esp_now_send and trigger LED light to change state -- should be able to do this in send_cb
 
-    if (send_ok){
+    if (true){
         for (uint8_t rx=0; rx<NUM_RECEIVERS; ++rx){
             ret = esp_now_send(receiver_mac_addresses[rx], data, len);    // Change this so instead of using all receiver mac addresses, we only use the ones we connected to - populate another list/ vec 
             bool peer_exists = esp_now_is_peer_exist(receiver_mac_addresses[rx]);
@@ -116,6 +116,7 @@ void send_to_all(const uint8_t *data, size_t len) {
         }
 
         if (ret != ESP_OK){
+            // vTaskDelay(10);
             err_count++;
             // ESP_LOGI("send", "%s", esp_err_to_name(ret));
         }
@@ -202,21 +203,21 @@ void parse_incoming(void *){
                     twai_message_t message = received_data.data;
 
                     #ifdef WiCAN_RX_Board
-                    rcv_counter++;
+                    // rcv_counter++;
 
-                    diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
-                    if (diff >= 1000){  // Print message every second
-                        printf("%.2f msgs / second\n", (((float)rcv_counter/diff)*1000.0));
-                        length = sprintf(scan_buf, "%.1fmsgs/s\n>", (((float)rcv_counter/diff)*1000.0));
-                    //     // tinyusb_cdcacm_write_queue(0, (uint8_t*)scan_buf, length);
-                    //     // tinyusb_cdcacm_write_flush(0, portMAX_DELAY);
+                    // diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
+                    // if (diff >= 1000){  // Print message every second
+                    //     printf("%.2f msgs / second\n", (((float)rcv_counter/diff)*1000.0));
+                    //     length = sprintf(scan_buf, "%.1fmsgs/s\n>", (((float)rcv_counter/diff)*1000.0));
+                    // //     // tinyusb_cdcacm_write_queue(0, (uint8_t*)scan_buf, length);
+                    // //     // tinyusb_cdcacm_write_flush(0, portMAX_DELAY);
 
-                        rcv_counter = 0;
-                        last_time = pdTICKS_TO_MS(xTaskGetTickCount());
+                    //     rcv_counter = 0;
+                    //     last_time = pdTICKS_TO_MS(xTaskGetTickCount());
                         
-                    }
-                    // uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
-                    // write_to_usb((uint8_t *)&msg_buffer, length);
+                    // }
+                    uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
+                    write_to_usb((uint8_t *)&msg_buffer, length);
 
                     #endif
 

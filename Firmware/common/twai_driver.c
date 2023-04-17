@@ -53,10 +53,10 @@ void CAN_RX_Task(void*){
         if (twai_receive(&message, pdMS_TO_TICKS(RX_Timeout)) == ESP_OK) {
             // See if we want to process std frames - always process extended frames
             if ((PROCESS_STD_FRAMES && !message.extd) || message.extd){
-                // if (xQueueSend(rx_can_queue, &message, (TickType_t)portMAX_DELAY) != pdTRUE){   // Change timeout to 0 to check if queue is full
-                //     printf("Wifi Queue Full\n");
-                // }  // Try changing to 0
-                if (xQueueSend(sd_can_queue, &message, (TickType_t)portMAX_DELAY) != pdTRUE){
+                if (xQueueSend(rx_can_queue, &message, (TickType_t)100) != pdTRUE){   // Change timeout to 0 to check if queue is full
+                    printf("Wifi Queue Full\n");
+                }  // Try changing to 0
+                if (xQueueSend(sd_can_queue, &message, (TickType_t)100) != pdTRUE){
                     printf("SD Queue Full\n");
                 }  // Try changing to 0
                 rcv_counter++;
@@ -109,7 +109,6 @@ void process_CAN_frame(void*) {
     while (1) {
         if( xQueueReceive(rx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
             send_CAN_frame(message);     // This causes board to reset when USB is not connected and receiver is not connected
-            // write_to_sd(message);
             rcv_counter++;
 
             diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
@@ -131,7 +130,6 @@ void sd_write_task(void*) {
     static uint32_t diff = 0;
     while (1) {
         if( xQueueReceive(sd_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
-            // send_CAN_frame(message);     // This causes board to reset when USB is not connected and receiver is not connected
             write_to_sd(message);
             rcv_counter++;
 
