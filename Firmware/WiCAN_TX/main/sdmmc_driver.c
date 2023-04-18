@@ -123,6 +123,7 @@ void write_to_sd(twai_message_t message){
 
 /*
 SD Card sector funcs - used for USB MSC
+FIXME: These were copy pasta'd and need to be fixed most likely
 */
 
 uint32_t storage_get_sector_count(void) {

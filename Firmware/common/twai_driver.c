@@ -11,7 +11,7 @@
 
 
 //Initialize configuration structures using macro initializers
-twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(TWAI_TX_Pin, TWAI_RX_Pin, TWAI_MODE_NORMAL);       // Maybe change mode to TWAI_MODE_NO_ACK
+twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(TWAI_TX_Pin, TWAI_RX_Pin, TWAI_MODE_NORMAL);
 // Can change rx_queue_len in the g_config if we want a larger message queue
 twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
 twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
@@ -81,20 +81,8 @@ void CAN_TX_Task(void*){
     tx_can_queue = xQueueCreate(PROCESS_QUEUE_SIZE, sizeof(twai_message_t));
     while (1){
         twai_message_t message;
-        if(xQueueReceive(tx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
-            // Send CAN message onto bus
-            // printf("Wireless Message received\n");
-            // printf("ID: %lu\tExt ID: %i\tDLC:%u\t", message.identifier, message.extd, message.data_length_code);
-            // for (int i = 0; i < message.data_length_code; i++) {
-            //     printf("%d ", message.data[i]);
-            // }
-            // printf("\n");
-
+        if(xQueueReceive(tx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {    
             if (twai_transmit(&message, pdMS_TO_TICKS(10)) == ESP_OK) {}
-                // printf("Message queued for transmission\n");
-            // } else {
-            //     printf("Failed to queue message for transmission\n");
-            // }
         }
     }
 }
@@ -108,7 +96,7 @@ void process_CAN_frame(void*) {
     static uint32_t diff = 0;
     while (1) {
         if( xQueueReceive(rx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
-            send_CAN_frame(message);     // This causes board to reset when USB is not connected and receiver is not connected
+            send_CAN_frame(message);
             rcv_counter++;
 
             diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
