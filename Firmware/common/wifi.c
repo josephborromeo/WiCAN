@@ -88,7 +88,7 @@ void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 }
 
 void espnow_recv_cb(const uint8_t *mac, const uint8_t *data, int data_len){
-    wican_data_t recv_data;
+    CAN_frame_t recv_data;
     memcpy(&recv_data, data, data_len);
 
     if (xQueueSend(incoming_can_queue, &recv_data, (TickType_t)0 ) != pdTRUE){
@@ -137,6 +137,7 @@ void send_to_all(const uint8_t *data, size_t len) {
     // printf("Sent Data\n");
 }
 
+// TODO: Deprecate this
 void test_send_data_task(void*){
     vTaskDelay(pdMS_TO_TICKS(1000));
     twai_message_t message;
@@ -168,25 +169,31 @@ void test_send_data_task(void*){
 }
 
 void send_CAN_frame(twai_message_t message){
-    wican_data_t can_data;
-    can_data.data_type = CAN_FRAME;
-    can_data.data = message;
+    CAN_frame_t can_msg;
 
-    send_to_all((uint8_t*)&can_data, sizeof(can_data));
+    can_msg.extd = message.extd;
+    can_msg.identifier = message.identifier;
+    can_msg.data_length_code = message.data_length_code;
+    memcpy(can_msg.data, message.data, can_msg.data_length_code);
+
+    send_to_all((uint8_t*)&can_msg, sizeof(can_msg));
 }
 
 void send_CAN_frame_to_Tx(twai_message_t message){
-    wican_data_t can_data;
-    can_data.data_type = CAN_FRAME;
-    can_data.data = message;
+    CAN_frame_t can_msg;
 
-    esp_now_send(transmitter_mac_address, (uint8_t*)&can_data, sizeof(can_data));
+    can_msg.extd = message.extd;
+    can_msg.identifier = message.identifier;
+    can_msg.data_length_code = message.data_length_code;
+    memcpy(can_msg.data, message.data, can_msg.data_length_code);
+
+    esp_now_send(transmitter_mac_address, (uint8_t*)&can_msg, sizeof(can_msg));
 }
 
 // Only receiver should print out received message, transmitter should transmit on bus
 void parse_incoming(void *){
-    incoming_can_queue = xQueueCreate(INCOMING_MSG_QUEUE_SIZE, sizeof(wican_data_t));
-    wican_data_t received_data;
+    incoming_can_queue = xQueueCreate(INCOMING_MSG_QUEUE_SIZE, sizeof(CAN_frame_t));
+    CAN_frame_t can_msg;
     uint8_t msg_buffer[SLCAN_MTU]; // Max Length of SLCAN Message
     static uint32_t rcv_counter = 0;
     uint32_t last_time = pdTICKS_TO_MS(xTaskGetTickCount());
@@ -196,41 +203,38 @@ void parse_incoming(void *){
     size_t length = 0; 
 
     while (1) {
-        if( xQueueReceive(incoming_can_queue, &(received_data), (TickType_t)portMAX_DELAY)) {
-            switch (received_data.data_type)
-            {
-                case CAN_FRAME:
-                    twai_message_t message = received_data.data;
+        if( xQueueReceive(incoming_can_queue, &(can_msg), (TickType_t)portMAX_DELAY)) {
+            twai_message_t message;
 
-                    #ifdef WiCAN_RX_Board
-                    // rcv_counter++;
+            message.extd = can_msg.extd;
+            message.identifier = can_msg.identifier;
+            message.data_length_code = can_msg.data_length_code;
+            memcpy(message.data, can_msg.data, can_msg.data_length_code);
 
-                    // diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
-                    // if (diff >= 1000){  // Print message every second
-                    //     printf("%.2f msgs / second\n", (((float)rcv_counter/diff)*1000.0));
-                    //     length = sprintf(scan_buf, "%.1fmsgs/s\n>", (((float)rcv_counter/diff)*1000.0));
-                    // //     // tinyusb_cdcacm_write_queue(0, (uint8_t*)scan_buf, length);
-                    // //     // tinyusb_cdcacm_write_flush(0, portMAX_DELAY);
+            #ifdef WiCAN_RX_Board
+            // rcv_counter++;
 
-                    //     rcv_counter = 0;
-                    //     last_time = pdTICKS_TO_MS(xTaskGetTickCount());
-                        
-                    // }
-                    uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
-                    write_to_usb((uint8_t *)&msg_buffer, length);
+            // diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
+            // if (diff >= 1000){  // Print message every second
+            //     printf("%.2f msgs / second\n", (((float)rcv_counter/diff)*1000.0));
+            //     length = sprintf(scan_buf, "%.1fmsgs/s\n>", (((float)rcv_counter/diff)*1000.0));
+            // //     // tinyusb_cdcacm_write_queue(0, (uint8_t*)scan_buf, length);
+            // //     // tinyusb_cdcacm_write_flush(0, portMAX_DELAY);
 
-                    #endif
+            //     rcv_counter = 0;
+            //     last_time = pdTICKS_TO_MS(xTaskGetTickCount());
+                
+            // }
+            uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
+            write_to_usb((uint8_t *)&msg_buffer, length);
 
-                    #ifdef WiCAN_TX_Board
-                    xQueueSend(tx_can_queue, &message, (TickType_t)0);
-                    // Send received CAN message on the bus
-                    #endif
+            #endif
 
-                break;
+            #ifdef WiCAN_TX_Board
+            // Send received CAN message on the bus
+            xQueueSend(tx_can_queue, &message, (TickType_t)0);
+            #endif
 
-                default:
-                ESP_LOGI("WIFI_PARSE", "Unknown Incoming Message Format");
-            }
         }
     }
     

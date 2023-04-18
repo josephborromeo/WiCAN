@@ -50,12 +50,18 @@ void CAN_RX_Task(void*){
 
     while (1){
         twai_message_t message;
+        CAN_frame_t can_msg;
         if (twai_receive(&message, pdMS_TO_TICKS(RX_Timeout)) == ESP_OK) {
             // See if we want to process std frames - always process extended frames
             if ((PROCESS_STD_FRAMES && !message.extd) || message.extd){
                 if (xQueueSend(rx_can_queue, &message, (TickType_t)100) != pdTRUE){   // Change timeout to 0 to check if queue is full
                     printf("Wifi Queue Full\n");
                 }  // Try changing to 0
+
+                can_msg.extd = message.extd;
+                can_msg.identifier = message.identifier;
+                can_msg.data_length_code = message.data_length_code;
+                memcpy(can_msg.data, message.data, can_msg.data_length_code);
                 if (xQueueSend(sd_can_queue, &message, (TickType_t)100) != pdTRUE){
                     printf("SD Queue Full\n");
                 }  // Try changing to 0
