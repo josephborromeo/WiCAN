@@ -109,8 +109,8 @@ class SerialData:
 
             except Exception as e:
                 # TODO: Handle not in DBC
-                # print(f"Caught {e} in pollingThread")
-                pass
+                print(f"Caught {e} in pollingThread")
+                # pass
 
             time.sleep(self.thread_interval)
 

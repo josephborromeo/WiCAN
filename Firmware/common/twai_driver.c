@@ -62,7 +62,8 @@ void CAN_RX_Task(void*){
                 can_msg.extd = message.extd;
                 can_msg.identifier = message.identifier;
                 can_msg.data_length_code = message.data_length_code;
-                memcpy(can_msg.data, message.data, can_msg.data_length_code);
+                memcpy(can_msg.data, message.data, sizeof(message.data));
+                
                 if (xQueueSend(sd_can_queue, &message, (TickType_t)100) != pdTRUE){
                     printf("SD Queue Full\n");
                 }  // Try changing to 0
@@ -93,7 +94,7 @@ void CAN_TX_Task(void*){
             message.extd = data_packet.frames[0].extd;
             message.identifier = data_packet.frames[0].identifier;
             message.data_length_code = data_packet.frames[0].data_length_code;
-            memcpy(message.data, data_packet.frames[0].data, data_packet.frames[0].data_length_code); 
+            memcpy(message.data, data_packet.frames[0].data, sizeof(data_packet.frames[0].data)); 
             if (twai_transmit(&message, pdMS_TO_TICKS(10)) == ESP_OK) {
                 printf("Sent Message onto CAN Bus\n");
             }
@@ -121,6 +122,7 @@ void process_CAN_frame(void*) {
                     data_packet.frames[i].extd = message.extd;
                     data_packet.frames[i].identifier = message.identifier;
                     data_packet.frames[i].data_length_code = message.data_length_code;
+                    memcpy(data_packet.frames[i].data, message.data, sizeof(message.data));
                     data_packet.num_frames++;
                 }
             }

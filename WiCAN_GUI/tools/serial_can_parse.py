@@ -62,7 +62,7 @@ start_time = time.perf_counter()
 num_msg = 0
 while time.perf_counter() < run_duration:
     try:
-        message = bus.recv(None)
+        message = bus.recv(0.5)
     except Exception:
         print("exception")
     # bus.recv(None)

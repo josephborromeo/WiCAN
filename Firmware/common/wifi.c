@@ -138,7 +138,7 @@ void send_CAN_frame_to_Tx(twai_message_t message){
     data_packet.frames[0].extd = message.extd;
     data_packet.frames[0].identifier = message.identifier;
     data_packet.frames[0].data_length_code = message.data_length_code;
-    memcpy(data_packet.frames[0].data, message.data, data_packet.frames[0].data_length_code);
+    memcpy(data_packet.frames[0].data, message.data, sizeof(message.data));
 
     esp_now_send(transmitter_mac_address, (uint8_t*)&data_packet, sizeof(data_packet));
 }
@@ -146,16 +146,15 @@ void send_CAN_frame_to_Tx(twai_message_t message){
 // Only receiver should print out received message, transmitter should transmit on bus
 void parse_incoming(void *){
     incoming_can_queue = xQueueCreate(INCOMING_MSG_QUEUE_SIZE, sizeof(wican_data_t));
-    wican_data_t data_packet;
     uint8_t msg_buffer[SLCAN_MTU]; // Max Length of SLCAN Message
     static uint32_t rcv_counter = 0;
     uint32_t last_time = pdTICKS_TO_MS(xTaskGetTickCount());
     static uint32_t diff = 0;
-
     char *scan_buf = (char *)malloc(64);
     size_t length = 0; 
 
     while (1) {
+        wican_data_t data_packet = {0};
         if( xQueueReceive(incoming_can_queue, &(data_packet), (TickType_t)1) == pdTRUE) {
             // printf("num_frames: %u\n", data_packet.num_frames);
             for (uint8_t i=0; i<data_packet.num_frames; i++){
@@ -163,7 +162,7 @@ void parse_incoming(void *){
                 message.extd = data_packet.frames[i].extd;
                 message.identifier = data_packet.frames[i].identifier;
                 message.data_length_code = data_packet.frames[i].data_length_code;
-                memcpy(message.data, data_packet.frames[i].data, data_packet.frames[i].data_length_code);
+                memcpy(message.data, data_packet.frames[i].data, sizeof(data_packet.frames[i].data));
 
                 #ifdef WiCAN_RX_Board
                 // rcv_counter++;
@@ -181,6 +180,13 @@ void parse_incoming(void *){
                 // }
                 uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
                 write_to_usb((uint8_t *)&msg_buffer, length);
+
+                // printf(" (%.4f)  %s  %lX   [%u] ", pdTICKS_TO_MS(xTaskGetTickCount())/1000.0, "can1", message.identifier, message.data_length_code);
+                // for (int i = 0; i < message.data_length_code; i++) {
+                //     printf(" %02X", message.data[i]);
+                // }
+
+                // printf("\n");
 
                 #endif
 
