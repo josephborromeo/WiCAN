@@ -244,7 +244,7 @@ class Ui(QtWidgets.QMainWindow):
 
         # Timer to Update the Graph
         self.update_timer = QtCore.QTimer()
-        self.update_timer.setInterval(1)
+        self.update_timer.setInterval(25)
         self.update_timer.timeout.connect(self.update_plot)
         self.update_timer.timeout.connect(self.fps_counter)
 
@@ -252,7 +252,7 @@ class Ui(QtWidgets.QMainWindow):
 
         # Timer to update other things
         self.slow_update_timer = QtCore.QTimer()
-        self.slow_update_timer.setInterval(50)      # TODO: Can likely make this slower
+        self.slow_update_timer.setInterval(500)      # TODO: Can likely make this slower
         self.slow_update_timer.timeout.connect(self.update_time)
         self.slow_update_timer.timeout.connect(self.update_serial_viewer)
         self.slow_update_timer.timeout.connect(self.update_tree)
