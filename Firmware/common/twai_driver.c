@@ -63,9 +63,9 @@ void CAN_RX_Task(void*){
                 can_msg.identifier = message.identifier;
                 can_msg.data_length_code = message.data_length_code;
                 memcpy(can_msg.data, message.data, can_msg.data_length_code);
-                // if (xQueueSend(sd_can_queue, &message, (TickType_t)100) != pdTRUE){
-                //     printf("SD Queue Full\n");
-                // }  // Try changing to 0
+                if (xQueueSend(sd_can_queue, &message, (TickType_t)100) != pdTRUE){
+                    printf("SD Queue Full\n");
+                }  // Try changing to 0
                 rcv_counter++;
             }
             
@@ -85,11 +85,18 @@ void CAN_RX_Task(void*){
 }
 
 void CAN_TX_Task(void*){
-    tx_can_queue = xQueueCreate(PROCESS_QUEUE_SIZE, sizeof(twai_message_t));
+    tx_can_queue = xQueueCreate(PROCESS_QUEUE_SIZE, sizeof(wican_data_t));
     while (1){
+        wican_data_t data_packet = {0};
         twai_message_t message;
-        if(xQueueReceive(tx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {    
-            if (twai_transmit(&message, pdMS_TO_TICKS(10)) == ESP_OK) {}
+        if(xQueueReceive(tx_can_queue, &(data_packet), (TickType_t)portMAX_DELAY)) {   
+            message.extd = data_packet.frames[0].extd;
+            message.identifier = data_packet.frames[0].identifier;
+            message.data_length_code = data_packet.frames[0].data_length_code;
+            memcpy(message.data, data_packet.frames[0].data, data_packet.frames[0].data_length_code); 
+            if (twai_transmit(&message, pdMS_TO_TICKS(10)) == ESP_OK) {
+                printf("Sent Message onto CAN Bus\n");
+            }
         }
     }
 }

@@ -132,14 +132,15 @@ void send_to_all(wican_data_t data_packet) {
 
 // TODO: Fix this to support new format
 void send_CAN_frame_to_Tx(twai_message_t message){
-    CAN_frame_t can_msg;
+    wican_data_t data_packet = {0};
+    data_packet.num_frames = 1;
 
-    can_msg.extd = message.extd;
-    can_msg.identifier = message.identifier;
-    can_msg.data_length_code = message.data_length_code;
-    memcpy(can_msg.data, message.data, can_msg.data_length_code);
+    data_packet.frames[0].extd = message.extd;
+    data_packet.frames[0].identifier = message.identifier;
+    data_packet.frames[0].data_length_code = message.data_length_code;
+    memcpy(data_packet.frames[0].data, message.data, data_packet.frames[0].data_length_code);
 
-    esp_now_send(transmitter_mac_address, (uint8_t*)&can_msg, sizeof(can_msg));
+    esp_now_send(transmitter_mac_address, (uint8_t*)&data_packet, sizeof(data_packet));
 }
 
 // Only receiver should print out received message, transmitter should transmit on bus
@@ -185,10 +186,13 @@ void parse_incoming(void *){
 
                 #ifdef WiCAN_TX_Board
                 // Send received CAN message on the bus
-                xQueueSend(tx_can_queue, &message, (TickType_t)0);      // FIXME: support new format
+                xQueueSend(tx_can_queue, &data_packet, (TickType_t)0);      // FIXME: support new format
                 #endif
 
             }
+            #ifdef WiCAN_RX_Board
+            flush_usb();
+            #endif
         }
     } 
 }
