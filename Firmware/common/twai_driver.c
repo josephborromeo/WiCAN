@@ -107,8 +107,10 @@ void process_CAN_frame(void*) {
         if (uxQueueMessagesWaiting(rx_can_queue) >= MAX_FRAMES ||((pdTICKS_TO_MS(xTaskGetTickCount()) - last_sent_time >= MAX_SEND_DELAY_MS) && uxQueueMessagesWaiting(rx_can_queue) > 0)){
             wican_data_t data_packet = {0};
             static uint8_t i=0;
-            for (i=0; i < MIN(uxQueueMessagesWaiting(rx_can_queue), MAX_FRAMES); i++){
-                if(xQueueReceive(rx_can_queue, &(message), (TickType_t)100)) {
+            uint8_t min_num = MIN(uxQueueMessagesWaiting(rx_can_queue), MAX_FRAMES);
+
+            for (i=0; i < min_num; i++){
+                if(xQueueReceive(rx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
                     data_packet.frames[i].extd = message.extd;
                     data_packet.frames[i].identifier = message.identifier;
                     data_packet.frames[i].data_length_code = message.data_length_code;
@@ -125,6 +127,8 @@ void process_CAN_frame(void*) {
                 rcv_counter = 0;
                 last_time = pdTICKS_TO_MS(xTaskGetTickCount());
             }
+
+            last_sent_time = pdTICKS_TO_MS(xTaskGetTickCount());
         }
         // else{
         //     vTaskDelay(1);

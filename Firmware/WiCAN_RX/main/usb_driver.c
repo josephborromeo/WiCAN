@@ -17,7 +17,7 @@ static uint8_t buf[CONFIG_TINYUSB_CDC_RX_BUFSIZE + 1];
 // Write buffer to usb output
 void write_to_usb (uint8_t* tx_buffer, uint8_t buff_size){
     tinyusb_cdcacm_write_queue(ITF_NUM_CDC, tx_buffer, buff_size);
-    tinyusb_cdcacm_write_flush(ITF_NUM_CDC, 0);
+    tinyusb_cdcacm_write_flush(ITF_NUM_CDC, 1000);
 }
 
 void send_cr(){

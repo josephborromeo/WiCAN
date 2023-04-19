@@ -155,7 +155,8 @@ void parse_incoming(void *){
     size_t length = 0; 
 
     while (1) {
-        if( xQueueReceive(incoming_can_queue, &(data_packet), (TickType_t)portMAX_DELAY)) {
+        if( xQueueReceive(incoming_can_queue, &(data_packet), (TickType_t)1) == pdTRUE) {
+            // printf("num_frames: %u\n", data_packet.num_frames);
             for (uint8_t i=0; i<data_packet.num_frames; i++){
                 twai_message_t message;
                 message.extd = data_packet.frames[i].extd;
@@ -169,7 +170,7 @@ void parse_incoming(void *){
                 // diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
                 // if (diff >= 1000){  // Print message every second
                 //     printf("%.2f msgs / second\n", (((float)rcv_counter/diff)*1000.0));
-                //     length = sprintf(scan_buf, "%.1fmsgs/s\n>", (((float)rcv_counter/diff)*1000.0));
+                //     // length = sprintf(scan_buf, "%.1fmsgs/s\n>", (((float)rcv_counter/diff)*1000.0));
                 // //     // tinyusb_cdcacm_write_queue(0, (uint8_t*)scan_buf, length);
                 // //     // tinyusb_cdcacm_write_flush(0, portMAX_DELAY);
 

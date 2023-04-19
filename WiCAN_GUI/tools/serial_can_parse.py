@@ -11,7 +11,7 @@ import can.interfaces.slcan as slcan
 run_duration = 120  # Seconds to run
 
 port = "COM12"
-baudrate = 1000000
+baudrate = 5000000
 serial_timeout = 0.05
 
 # ser = serial.Serial(port, baudrate, timeout=serial_timeout)
