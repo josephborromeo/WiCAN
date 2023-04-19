@@ -7,6 +7,7 @@
 #include "freertos/queue.h"
 
 #include "wifi.h"
+// #include "data_types.h"
 #include  "../WiCAN_TX/main/sdmmc_driver.h"     // FIXME
 
 
@@ -62,9 +63,9 @@ void CAN_RX_Task(void*){
                 can_msg.identifier = message.identifier;
                 can_msg.data_length_code = message.data_length_code;
                 memcpy(can_msg.data, message.data, can_msg.data_length_code);
-                if (xQueueSend(sd_can_queue, &message, (TickType_t)100) != pdTRUE){
-                    printf("SD Queue Full\n");
-                }  // Try changing to 0
+                // if (xQueueSend(sd_can_queue, &message, (TickType_t)100) != pdTRUE){
+                //     printf("SD Queue Full\n");
+                // }  // Try changing to 0
                 rcv_counter++;
             }
             
@@ -95,15 +96,28 @@ void CAN_TX_Task(void*){
 
 void process_CAN_frame(void*) {
     rx_can_queue = xQueueCreate(PROCESS_QUEUE_SIZE, sizeof(twai_message_t));
-    // Send to SD card and Wifi tasks
     twai_message_t message;
     static uint32_t rcv_counter = 0;
     uint32_t last_time = pdTICKS_TO_MS(xTaskGetTickCount());
+    uint32_t last_sent_time = pdTICKS_TO_MS(xTaskGetTickCount());
     static uint32_t diff = 0;
+    
     while (1) {
-        if( xQueueReceive(rx_can_queue, &(message), (TickType_t)portMAX_DELAY)) {
-            send_CAN_frame(message);
-            rcv_counter++;
+        // Check if enough messages to fill msg array, or if > 100 ms has surpassed
+        if (uxQueueMessagesWaiting(rx_can_queue) >= MAX_FRAMES ||((pdTICKS_TO_MS(xTaskGetTickCount()) - last_sent_time >= MAX_SEND_DELAY_MS) && uxQueueMessagesWaiting(rx_can_queue) > 0)){
+            wican_data_t data_packet = {0};
+            static uint8_t i=0;
+            for (i=0; i < MIN(uxQueueMessagesWaiting(rx_can_queue), MAX_FRAMES); i++){
+                if(xQueueReceive(rx_can_queue, &(message), (TickType_t)100)) {
+                    data_packet.frames[i].extd = message.extd;
+                    data_packet.frames[i].identifier = message.identifier;
+                    data_packet.frames[i].data_length_code = message.data_length_code;
+                    data_packet.num_frames++;
+                }
+            }
+            // printf("num_frames: %u frames\n", data_packet.num_frames);
+            send_to_all(data_packet);
+            rcv_counter += i;
 
             diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
             if (diff >= 1000){  // Print message every second
@@ -112,6 +126,9 @@ void process_CAN_frame(void*) {
                 last_time = pdTICKS_TO_MS(xTaskGetTickCount());
             }
         }
+        // else{
+        //     vTaskDelay(1);
+        // }
     }
 }
 

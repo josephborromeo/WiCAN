@@ -32,12 +32,9 @@ void espnow_init(void);
 void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status);
 void espnow_recv_cb(const uint8_t *mac, const uint8_t *data, int data_len);
 
-void test_send_data_task(void*);
-void send_to_all(const uint8_t *data, size_t len);
 
-void send_CAN_frame(twai_message_t message);
+void send_to_all(wican_data_t data_packet);
+
 void send_CAN_frame_to_Tx(twai_message_t message);
 
-void send_temp_data(void*);
-
-void parse_incoming(void *);
+void parse_incoming(void*);
