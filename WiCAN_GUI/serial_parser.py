@@ -3,6 +3,7 @@ import time
 import threading
 import cantools
 import can.interfaces.slcan as slcan
+import sys
 
 
 class SerialData:
@@ -25,9 +26,11 @@ class SerialData:
         self.bus = slcan.slcanBus(channel=self.port, ttyBaudrate=self.baudrate, bitrate=500000)
         self.data = {}
 
+        # sys.setswitchinterval(0.0005)
+
         # Thread Params
         self.threadStop = False
-        self.thread_interval = 0.0005      # TODO: Faster thread slows down gui
+        self.thread_interval = 0.001      # TODO: Faster thread slows down gui
         self.serial_thread = threading.Thread(target=self.pollingThread)
         self.serial_thread.start()
 
@@ -50,16 +53,16 @@ class SerialData:
                 if signal in self.data.keys():
                     # Ensure list does not grow too large:
                     if len(self.data.get(signal)["x"]) >= self.max_data:
-                        self.data.get(signal)["x"] = self.data.get(signal)["x"][1:] + [time.clock()]
+                        self.data.get(signal)["x"] = self.data.get(signal)["x"][1:] + [time.perf_counter()]
                         self.data.get(signal)["y"] = self.data.get(signal)["y"][1:] + [float(data_val)]
                     else:
-                        self.data.get(signal)["x"].append(time.clock())
+                        self.data.get(signal)["x"].append(time.perf_counter())
                         self.data.get(signal)["y"].append(float(data_val))
 
                 else:
                     # Add key and value to data dict
                     self.data.update({signal: {"x": [], "y": []}})
-                    self.data.get(signal)["x"].append(time.clock())
+                    self.data.get(signal)["x"].append(time.perf_counter())
                     self.data.get(signal)["y"].append(float(data_val))
 
             except Exception as e:
@@ -86,33 +89,43 @@ class SerialData:
         # TODO: Improve this to use some sort of timer instead of a sleep function
         count = 0
         start_time = time.perf_counter()
+        counter_start_time = time.perf_counter()
+        incoming_queue = []
         while not self.threadStop:
-            try:
-                message = self.bus.recv(None)    # Need to Add timeout or else app wont close :(
+            while len(incoming_queue) < 50 and (time.perf_counter() - start_time) < 0.5:
+                try:
+                    message = self.bus.recv(.1)    # Need to Add timeout or else app wont close :(
 
-                if message is not None:
-                    count += 1
+                    if message is not None:
+                        count += 1
 
-                    if time.perf_counter()-start_time >= 1:
-                        print(f"{count} msgs/s")
-                        count = 0
-                        start_time = time.perf_counter()
-                    decoded_data = self.db.decode_message(
-                        message.arbitration_id,
-                        message.data,
-                        decode_choices=False,   # TODO: Handle signals with text choices
-                        decode_containers=False,    # might have to be true and handle the different containers (possibly with cell temps
-                        allow_truncated=True,
-                    )
+                        if time.perf_counter()-counter_start_time >= 1:
+                            print(f"{count} msgs/s")
+                            count = 0
+                            counter_start_time = time.perf_counter()
+                        decoded_data = self.db.decode_message(
+                            message.arbitration_id,
+                            message.data,
+                            decode_choices=False,   # TODO: Handle signals with text choices
+                            decode_containers=False,    # might have to be true and handle the different containers (possibly with cell temps
+                            allow_truncated=True,
+                        )
+                        incoming_queue.append(decoded_data)
 
-                    self.parse_data(decoded_data)
+                        self.parse_data(decoded_data)
 
-            except Exception as e:
-                # TODO: Handle not in DBC
-                print(f"Caught {e} in pollingThread")
-                # pass
+                except Exception as e:
+                    # TODO: Handle not in DBC
+                    print(f"Caught {e} in pollingThread")
+                    # pass
 
+            # s_parse = time.perf_counter()
+            # # for i in incoming_queue:
+            # #     self.parse_data(i)
+            # print(f"took {time.perf_counter()-s_parse}s to parse")
+            incoming_queue = []
             time.sleep(self.thread_interval)
+            start_time = time.perf_counter()
 
     def stop_thread(self):
         """
