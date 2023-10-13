@@ -26,6 +26,9 @@ void wifi_init(void) {
     ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE)); // No power saving
     ESP_ERROR_CHECK( esp_wifi_start());
     ESP_ERROR_CHECK( esp_wifi_set_channel(CONFIG_ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE));
+    
+    // FIXME: Test this out, increased RX receive rate
+    // ESP_ERROR_CHECK(esp_wifi_config_espnow_rate(ESP_IF_WIFI_STA, WIFI_PHY_RATE_54M));
 
 #if CONFIG_ESPNOW_ENABLE_LONG_RANGE
     ESP_ERROR_CHECK( esp_wifi_set_protocol(ESPNOW_WIFI_IF, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR) );
@@ -71,8 +74,6 @@ void espnow_init(void) {
 void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 {   // Just printout if error occurs - maybe disable
     
-    // FIXME: Might be causing crashing when there is no receiver
-    
     if (mac_addr == NULL) {
         ESP_LOGI("send_cb", "Send cb arg error");
         return;
@@ -85,29 +86,29 @@ void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
 }
 
 void espnow_recv_cb(const uint8_t *mac, const uint8_t *data, int data_len){
-    wican_data_t recv_data;
-    memcpy(&recv_data, data, data_len);
-    xQueueSend(incoming_can_queue, &recv_data, (TickType_t)0);
+    wican_data_t data_packet;
+    memcpy(&data_packet, data, data_len);
+
+    if (xQueueSend(incoming_can_queue, &data_packet, (TickType_t)100) != pdTRUE){
+        printf("queue full\n");
+    }
+
 }
 
 /*
     Send data to all receivers in list 
 */
-void send_to_all(const uint8_t *data, size_t len) {
+void send_to_all(wican_data_t data_packet) {
     static esp_err_t ret = ESP_OK;
     static uint8_t err_count = 0;
     static uint32_t err_timer;
     static bool send_ok = true;                                                                                      
     // TODO: Get return value of esp_now_send and trigger LED light to change state -- should be able to do this in send_cb
 
-    if (send_ok){
+    if (true){
         for (uint8_t rx=0; rx<NUM_RECEIVERS; ++rx){
-            ret = esp_now_send(receiver_mac_addresses[rx], data, len);    // Change this so instead of using all receiver mac addresses, we only use the ones we connected to - populate another list/ vec 
-            bool peer_exists = esp_now_is_peer_exist(receiver_mac_addresses[rx]);
-            // ESP_LOGI("send", "Peer exists: %u", peer_exists);
-
+            ret = esp_now_send(receiver_mac_addresses[rx], (uint8_t*)&data_packet, sizeof(data_packet));    // Change this so instead of using all receiver mac addresses, we only use the ones we connected to - populate another list/ vec 
         }
-
         if (ret != ESP_OK){
             err_count++;
             // ESP_LOGI("send", "%s", esp_err_to_name(ret));
@@ -125,60 +126,27 @@ void send_to_all(const uint8_t *data, size_t len) {
         send_ok = false;
         err_count = 0;
     }
-    
-    // printf("Sent Data\n");
+
 }
 
-void test_send_data_task(void*){
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    twai_message_t message;
-    uint16_t speed = 200;
-    bool reverse = false;
 
-    message.identifier = 68157961; // WSBFR_Sensors
-    message.extd=1;
-    message.data_length_code = 6;
-
-    // Change this so that speeed changes as a sine wave
-
-    for (int i = 0; i < 4; i++) {
-        message.data[i] = 0;
-    }
-
-    while (1){
-        speed += (5 - 10*reverse);
-        message.data[4] = speed & 0xFF;
-        message.data[5] = speed >> 8;
-
-        if (speed >= 800 || speed <= 200){
-            reverse = !reverse;
-        }
-
-        send_CAN_frame(message);
-        vTaskDelay(pdMS_TO_TICKS(100));    // Sleep for 0.5s
-    }
-}
-
-void send_CAN_frame(twai_message_t message){
-    wican_data_t can_data;
-    can_data.data_type = CAN_FRAME;
-    can_data.data = message;
-
-    send_to_all((uint8_t*)&can_data, sizeof(can_data));
-}
-
+// TODO: Fix this to support new format
 void send_CAN_frame_to_Tx(twai_message_t message){
-    wican_data_t can_data;
-    can_data.data_type = CAN_FRAME;
-    can_data.data = message;
+    wican_data_t data_packet = {0};
+    data_packet.num_frames = 1;
 
-    esp_now_send(transmitter_mac_address, (uint8_t*)&can_data, sizeof(can_data));
+    data_packet.frames[0].extd = message.extd;
+    data_packet.frames[0].identifier = message.identifier;
+    data_packet.frames[0].data_length_code = message.data_length_code;
+    memcpy(data_packet.frames[0].data, message.data, data_packet.frames[0].data_length_code);
+
+    esp_now_send(transmitter_mac_address, (uint8_t*)&data_packet, sizeof(data_packet));
 }
 
 // Only receiver should print out received message, transmitter should transmit on bus
 void parse_incoming(void *){
     incoming_can_queue = xQueueCreate(INCOMING_MSG_QUEUE_SIZE, sizeof(wican_data_t));
-    wican_data_t received_data;
+    wican_data_t data_packet;
     uint8_t msg_buffer[SLCAN_MTU]; // Max Length of SLCAN Message
     static uint32_t rcv_counter = 0;
     uint32_t last_time = pdTICKS_TO_MS(xTaskGetTickCount());
@@ -188,42 +156,43 @@ void parse_incoming(void *){
     size_t length = 0; 
 
     while (1) {
-        if( xQueueReceive(incoming_can_queue, &(received_data), (TickType_t)portMAX_DELAY)) {
-            switch (received_data.data_type)
-            {
-                case CAN_FRAME:
-                    twai_message_t message = received_data.data;
+        if( xQueueReceive(incoming_can_queue, &(data_packet), (TickType_t)1) == pdTRUE) {
+            // printf("num_frames: %u\n", data_packet.num_frames);
+            for (uint8_t i=0; i<data_packet.num_frames; i++){
+                twai_message_t message;
+                message.extd = data_packet.frames[i].extd;
+                message.identifier = data_packet.frames[i].identifier;
+                message.data_length_code = data_packet.frames[i].data_length_code;
+                memcpy(message.data, data_packet.frames[i].data, data_packet.frames[i].data_length_code);
 
-                    #ifdef WiCAN_RX_Board
-                    // rcv_counter++;
+                #ifdef WiCAN_RX_Board
+                // rcv_counter++;
 
-                    // diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
-                    // if (diff >= 1000){  // Print message every second
-                    //     // printf("%.2f msgs / second\n", (((float)rcv_counter/diff)*1000.0));
-                    //     // length = sprintf(scan_buf, "%.1fmsgs/s\n>", (((float)rcv_counter/diff)*1000.0));
-                    //     // tinyusb_cdcacm_write_queue(0, (uint8_t*)scan_buf, length);
-                    //     // tinyusb_cdcacm_write_flush(0, portMAX_DELAY);
+                // diff = pdTICKS_TO_MS(xTaskGetTickCount()) - last_time;
+                // if (diff >= 1000){  // Print message every second
+                //     printf("%.2f msgs / second\n", (((float)rcv_counter/diff)*1000.0));
+                //     // length = sprintf(scan_buf, "%.1fmsgs/s\n>", (((float)rcv_counter/diff)*1000.0));
+                // //     // tinyusb_cdcacm_write_queue(0, (uint8_t*)scan_buf, length);
+                // //     // tinyusb_cdcacm_write_flush(0, portMAX_DELAY);
 
-                    //     rcv_counter = 0;
-                    //     last_time = pdTICKS_TO_MS(xTaskGetTickCount());
-                        
-                    // }
-                    uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
-                    write_to_usb((uint8_t *)&msg_buffer, length);
+                //     rcv_counter = 0;
+                //     last_time = pdTICKS_TO_MS(xTaskGetTickCount());
+                    
+                // }
+                uint8_t length = slcan_format((uint8_t *)&msg_buffer, message);
+                write_to_usb((uint8_t *)&msg_buffer, length);
 
-                    #endif
+                #endif
 
-                    #ifdef WiCAN_TX_Board
-                    xQueueSend(tx_can_queue, &message, (TickType_t)0);
-                    // Send received CAN message on the bus
-                    #endif
+                #ifdef WiCAN_TX_Board
+                // Send received CAN message on the bus
+                xQueueSend(tx_can_queue, &data_packet, (TickType_t)0);      // FIXME: support new format
+                #endif
 
-                break;
-
-                default:
-                ESP_LOGI("WIFI_PARSE", "Unknown Incoming Message Format");
             }
+            #ifdef WiCAN_RX_Board
+            flush_usb();
+            #endif
         }
-    }
-    
+    } 
 }

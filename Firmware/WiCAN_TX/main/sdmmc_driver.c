@@ -110,7 +110,7 @@ void create_log_file(void){
      (timestamp_seconds)  bus  messageID   [DLC]  D7 D6 D5 D4 D3 D2 D1 D0
 */
 void write_to_sd(twai_message_t message){
-
+    // TODO: Write to string and then do a single fprintf call - might make it faster?
     fprintf(fp, " (%.4f)  %s  %lX   [%u] ", pdTICKS_TO_MS(xTaskGetTickCount())/1000.0, "can1", message.identifier, message.data_length_code);
     for (int i = 0; i < message.data_length_code; i++) {
         fprintf(fp, " %02X", message.data[i]);
@@ -123,6 +123,7 @@ void write_to_sd(twai_message_t message){
 
 /*
 SD Card sector funcs - used for USB MSC
+FIXME: These were copy pasta'd and need to be fixed most likely
 */
 
 uint32_t storage_get_sector_count(void) {

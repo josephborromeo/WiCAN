@@ -17,7 +17,10 @@ static uint8_t buf[CONFIG_TINYUSB_CDC_RX_BUFSIZE + 1];
 // Write buffer to usb output
 void write_to_usb (uint8_t* tx_buffer, uint8_t buff_size){
     tinyusb_cdcacm_write_queue(ITF_NUM_CDC, tx_buffer, buff_size);
-    tinyusb_cdcacm_write_flush(ITF_NUM_CDC, 0);
+}
+
+void flush_usb(void){
+    tinyusb_cdcacm_write_flush(ITF_NUM_CDC, 1000);
 }
 
 void send_cr(){
@@ -72,8 +75,8 @@ void usb_init(void){
         .bLength = sizeof(my_descriptor),
         .bDescriptorType = TUSB_DESC_DEVICE,
         .bcdUSB = 0x0200, // USB version. 0x0200 means version 2.0
-        .bDeviceClass = TUSB_CLASS_UNSPECIFIED,
-        .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,
+        .bDeviceClass = TUSB_CLASS_CDC,
+        .bMaxPacketSize0 = 128,
 
         .idVendor = 0x303A,
         .idProduct = 0x3000,

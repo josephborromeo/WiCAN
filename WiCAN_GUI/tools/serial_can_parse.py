@@ -11,14 +11,17 @@ import can.interfaces.slcan as slcan
 run_duration = 120  # Seconds to run
 
 port = "COM12"
-baudrate = 1000000
+baudrate = 5000000
 serial_timeout = 0.05
 
 # ser = serial.Serial(port, baudrate, timeout=serial_timeout)
 db = cantools.database.load_file("../resources/2018CAR.dbc")
 
 print("Going to init bus")
-bus = slcan.slcanBus(channel=port, ttyBaudrate=baudrate, bitrate=500000)
+bus = slcan.slcanBus(channel=port, ttyBaudrate=baudrate, bitrate=500000, rtscts=True)
+
+
+# print(bus.poll_interval)
 print("bus initialized")
 
 
@@ -29,10 +32,10 @@ data_buff = ""
 # msg_data = tx_msg.encode({"ButtonEnduranceToggleEnabled":0, "ButtonEnduranceLapEnabled":0, "ButtonTCEnabled":0, "ButtonHVEnabled": 1, "ButtonEMEnabled": 0})
 #
 # msg = can.Message(arbitration_id=tx_msg.frame_id, data=msg_data, is_extended_id=True)
-# bus.open()
-# bus.close()
+bus.open()
+bus.close()
 
-# bus.open()
+bus.open()
 
 
 
@@ -62,7 +65,9 @@ while time.perf_counter() < run_duration:
         message = bus.recv(None)
     except Exception:
         print("exception")
+    # bus.recv(None)
     num_msg += 1
+
 
     if time.perf_counter() - start_time > 1:
         print(f"{float(num_msg) / (time.perf_counter() - start_time):.2f} msgs / s")
