@@ -17,6 +17,13 @@
 
 ## Software
 
+#### High Level Features:
+- Be able to handle 100% busload at 500k baud without dropping frames
+- Be able to handle 100% busload for logging
+- Don't overheat
+- Download logs over USB
+
+#### Backend/ Frontend
 - Support CAN messages not in DBC
 - Support Sending CAN messages
 - Support more information in `Live Data` Tab
@@ -34,4 +41,7 @@
 ## Hardware
 
 - Add proper USB-C Support (5.1 kOhms CC1 and CC2 pull-downs)
+- Switching Regulator
+- Better Buttons
+- Smaller if possible
 ---
