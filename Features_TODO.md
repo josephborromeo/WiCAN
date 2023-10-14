@@ -24,6 +24,7 @@
 - Download logs over USB
 
 #### Backend/ Frontend
+- Switch to Python 3.11 for more speed
 - Support CAN messages not in DBC
 - Support Sending CAN messages
 - Support more information in `Live Data` Tab
