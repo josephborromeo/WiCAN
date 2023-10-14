@@ -11,6 +11,7 @@
   - Actually opening and closing ports
   - Baudrate selection
   - Standard ID support
+- Grabbing Logs via USB
 - Standard ID support in general
 - Support Sending CAN messages from Receiver &rarr; Transmitter &rarr; Bus
 ---
@@ -45,4 +46,5 @@
 - Switching Regulator
 - Better Buttons
 - Smaller if possible
+- Better Case Design
 ---
