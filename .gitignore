@@ -10,6 +10,9 @@ Project Outputs for */
 output/
 __Previews/
 
+# Rust
+target/ 
+
 # web reports
 *.PcbDoc.htm
 *.SchDoc.htm
