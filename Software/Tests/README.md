@@ -1,4 +1,5 @@
 # Tests
+All Tests should be run from the top level `WiCAN` directory
 
 ### Purpose
 The purpose of this directory is to create a location where tests can be stored and executed from. 
