@@ -10,9 +10,6 @@ Project Outputs for */
 output/
 __Previews/
 
-# Don't Ignore CAN Log Directory
-!Software/Tests/CAN_logs/*
-
 # web reports
 *.PcbDoc.htm
 *.SchDoc.htm
