@@ -11,9 +11,9 @@
   - Actually opening and closing ports
   - Baudrate selection
   - Standard ID support
-- Grabbing Logs via USB
+- Grabbing Logs via USB (switch to USB on button press / USB plugged)
 - Standard ID support in general
-- Support Sending CAN messages from Receiver &rarr; Transmitter &rarr; Bus
+- Support Sending CAN messages from Receiver &rarr; Transmitter &rarr; Bus - **Done**?
 ---
 
 ## Software
@@ -43,8 +43,10 @@
 ## Hardware
 
 - Add proper USB-C Support (5.1 kOhms CC1 and CC2 pull-downs)
+- Support USB plugged detection to switch to mass storage mode
 - Switching Regulator
 - Better Buttons
 - Smaller if possible
 - Better Case Design
+- RTC for real log time/ filename?
 ---
