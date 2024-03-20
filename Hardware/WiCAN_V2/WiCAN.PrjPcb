@@ -84,6 +84,23 @@ GenerateClassCluster=0
 DocumentUniqueId=SFNVAVUW
 
 [Document3]
+DocumentPath=Power.SchDoc
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=0
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=PCASPLAK
+
+[Document4]
 DocumentPath=WiCAN_master.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -100,7 +117,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=AIBNCJYN
 
-[Document4]
+[Document5]
 DocumentPath=Processor.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -116,23 +133,6 @@ ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=YJUROCZO
-
-[Document5]
-DocumentPath=Power.SchDoc
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=0
-ClassGenCCAutoRoomEnabled=1
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=PCASPLAK
 
 [Document6]
 DocumentPath=CAN.SchDoc
@@ -158,7 +158,7 @@ AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
 AnnotateSuffix=
 AnnotateScope=All
-AnnotateOrder=-1
+AnnotateOrder=5
 DoLibraryUpdate=1
 DoDatabaseUpdate=1
 ClassGenCCAutoEnabled=1
@@ -192,7 +192,7 @@ AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
 AnnotateSuffix=
 AnnotateScope=All
-AnnotateOrder=-1
+AnnotateOrder=6
 DoLibraryUpdate=1
 DoDatabaseUpdate=1
 ClassGenCCAutoEnabled=1
@@ -976,6 +976,8 @@ Type133=1
 Type134=1
 Type135=1
 Type136=1
+Type137=1
+Type138=1
 
 [Difference Levels]
 Type1=1
@@ -1054,7 +1056,7 @@ Type73=1
 Type74=1
 
 [Electrical Rules Check]
-Type1=1
+Type1=0
 Type2=1
 Type3=2
 Type4=1
@@ -1205,6 +1207,8 @@ Type148=2
 Type149=2
 Type150=2
 Type151=2
+Type152=1
+Type153=1
 
 [ERC Connection Matrix]
 L1=NNNNNNNNNNNWNNNWW
